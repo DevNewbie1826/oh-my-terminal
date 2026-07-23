@@ -1,0 +1,472 @@
+/* Sidebar: nav / body / footer, collapse toggle, session tree, mobile drawer */
+
+.th-sidebar {
+  position: relative;
+  width: var(--th-sidebar-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--th-surface);
+  border-right: 1px solid var(--th-border);
+  transition: width var(--th-dur-slow) var(--th-ease),
+    transform var(--th-dur-slow) var(--th-ease);
+  z-index: 40;
+}
+
+.th-sidebar--collapsed {
+  width: 0;
+  border-right-color: transparent;
+}
+
+.th-sidebar-inner {
+  width: var(--th-sidebar-w);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- nav (top) ---- */
+.th-sidebar-nav {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--th-header-h);
+  padding: 0 14px;
+  border-bottom: 1px solid var(--th-border);
+}
+
+.th-sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--th-text);
+  white-space: nowrap;
+}
+
+.th-sidebar-logo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--th-success);
+  box-shadow: 0 0 8px var(--th-success);
+  animation: th-pulse 2.4s var(--th-ease) infinite;
+}
+
+@keyframes th-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.th-sidebar-nav-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+
+/* ---- body (scrollable tree) ---- */
+.th-sidebar-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 8px;
+}
+
+.th-sidebar-section-label {
+  padding: 4px 8px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+  white-space: nowrap;
+}
+
+.th-sidebar-empty {
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.th-sidebar-empty-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--th-text-dim);
+}
+
+.th-sidebar-empty-hint {
+  font-size: 12px;
+  color: var(--th-muted);
+  line-height: 1.5;
+}
+
+/* ---- footer ---- */
+.th-sidebar-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--th-border);
+}
+
+.th-sidebar-lang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  font-size: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-sidebar-lang:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+  border-color: var(--th-border-strong);
+}
+
+.th-sidebar-lang select {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--th-text);
+  cursor: pointer;
+}
+
+.th-sidebar-footer-spacer {
+  flex: 1;
+}
+
+/* ---- buttons ---- */
+.th-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-btn-icon:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+}
+
+.th-btn-icon:active {
+  background: var(--th-active);
+}
+
+.th-btn-icon--on {
+  color: var(--th-text);
+  background: var(--th-active);
+}
+
+.th-btn-icon--danger:hover {
+  color: var(--th-error);
+  background: var(--th-error-bg);
+}
+
+.th-btn-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px dashed var(--th-border-strong);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-btn-add:hover {
+  color: var(--th-text);
+  border-color: var(--th-muted);
+  background: var(--th-hover);
+}
+
+/* ---- collapse toggle (edge-mounted) ---- */
+.th-sidebar-toggle {
+  position: absolute;
+  top: 8px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--th-border-strong);
+  background: var(--th-surface-raised);
+  color: var(--th-muted);
+  box-shadow: var(--th-shadow-sm);
+  z-index: 50;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-sidebar-toggle:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+  transform: scale(1.08);
+}
+
+.th-sidebar-toggle svg {
+  transition: transform var(--th-dur-slow) var(--th-ease);
+}
+
+.th-sidebar--collapsed .th-sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* When collapsed the sidebar has zero width, so an edge-mounted toggle would
+   hang half off-screen. Pin it fully inside the viewport and brighten it so
+   it reads clearly against the bare background. */
+.th-sidebar--collapsed .th-sidebar-toggle {
+  right: auto;
+  left: 8px;
+  color: var(--th-text-dim);
+  background: var(--th-surface);
+  border-color: var(--th-border-strong);
+}
+
+/* collapsed state keeps the toggle reachable */
+.th-sidebar--collapsed .th-sidebar-inner {
+  visibility: hidden;
+}
+
+/* ---- session tree ---- */
+.th-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.th-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--th-node-h);
+  padding: 0 8px;
+  border-radius: var(--th-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-tree-node:hover {
+  background: var(--th-hover);
+}
+
+.th-tree-node--active {
+  background: var(--th-active);
+}
+
+.th-tree-node--active .th-tree-label {
+  color: var(--th-text);
+  font-weight: 600;
+}
+
+.th-tree-chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--th-faint);
+  transition: transform var(--th-dur) var(--th-ease);
+}
+
+.th-tree-chevron--open {
+  transform: rotate(90deg);
+}
+
+.th-tree-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--th-muted);
+}
+
+.th-tree-node--active > .th-tree-icon {
+  color: var(--th-text);
+}
+
+/* Placement indicator: filled when the session is shown in a pane. */
+.th-tree-placed {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--th-faint);
+  transition: background var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-tree-placed--on {
+  background: var(--th-success);
+  border-color: var(--th-success);
+}
+
+.th-tree-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--th-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.th-tree-count {
+  flex: none;
+  font-family: var(--th-font-mono);
+  font-size: 10px;
+  color: var(--th-faint);
+  border: 1px solid var(--th-border);
+  border-radius: 9px;
+  padding: 0 6px;
+  line-height: 16px;
+}
+
+.th-tree-actions {
+  display: none;
+  flex: none;
+  align-items: center;
+  gap: 1px;
+}
+
+.th-tree-node:hover .th-tree-actions,
+.th-tree-node:focus-within .th-tree-actions {
+  display: inline-flex;
+}
+
+.th-tree-node:hover .th-tree-count,
+.th-tree-node:focus-within .th-tree-count {
+  display: none;
+}
+
+.th-tree-actions .th-btn-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.th-tree-children {
+  margin-left: 14px;
+  padding-left: 8px;
+  border-left: 1px solid var(--th-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.th-tree-children--closed {
+  display: none;
+}
+
+/* inline rename input */
+.th-tree-rename {
+  flex: 1;
+  min-width: 0;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border-strong);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  color: var(--th-text);
+  outline: none;
+}
+
+.th-tree-rename:focus {
+  border-color: var(--th-accent);
+}
+
+/* ---- mobile drawer ---- */
+.th-backdrop {
+  display: none;
+}
+
+.th-mobile-menu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .th-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* fixed positioning anchors to the layout viewport, which on iOS extends
+       behind the URL bar / keyboard — size to the visual viewport instead so
+       the footer stays visible. */
+    height: calc(var(--th-vh-unit, 1vh) * 100);
+    width: var(--th-sidebar-w);
+    transform: translateX(0);
+    box-shadow: var(--th-shadow-lg);
+  }
+
+  .th-sidebar--collapsed {
+    width: var(--th-sidebar-w);
+    transform: translateX(-100%);
+    border-right-color: var(--th-border);
+  }
+
+  .th-sidebar--collapsed .th-sidebar-inner {
+    visibility: visible;
+  }
+
+  .th-sidebar-toggle {
+    display: none;
+  }
+
+  .th-backdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: calc(var(--th-vh-unit, 1vh) * 100);
+    width: 100%;
+    background: var(--th-backdrop);
+    z-index: 35;
+    animation: th-fade-in var(--th-dur) var(--th-ease);
+  }
+
+  .th-mobile-menu {
+    display: inline-flex;
+  }
+}
+
+@keyframes th-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

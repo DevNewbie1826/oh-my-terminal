@@ -1,0 +1,494 @@
+/* Modal overlay, dialog, wizard steps, alerts, folder picker */
+
+.th-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--th-backdrop);
+  animation: th-fade-in var(--th-dur) var(--th-ease);
+}
+
+.th-modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  box-shadow: var(--th-shadow-lg);
+  outline: none;
+  animation: th-modal-in var(--th-dur-slow) var(--th-ease);
+}
+
+@keyframes th-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.th-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-modal-close:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+}
+
+/* ---- wizard chrome ---- */
+.th-wizard-head {
+  flex: none;
+  padding: 22px 24px 0;
+}
+
+.th-wizard-kicker {
+  font-family: var(--th-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+  margin-bottom: 6px;
+}
+
+.th-wizard-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--th-text);
+}
+
+.th-wizard-desc {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--th-muted);
+}
+
+.th-wizard-steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.th-wizard-step {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--th-border);
+  transition: background var(--th-dur-slow) var(--th-ease);
+}
+
+.th-wizard-step--done {
+  background: var(--th-muted);
+}
+
+.th-wizard-step--current {
+  background: var(--th-accent);
+}
+
+.th-wizard-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 24px;
+}
+
+.th-wizard-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px 20px;
+  border-top: 1px solid var(--th-border);
+}
+
+.th-wizard-foot-spacer {
+  flex: 1;
+}
+
+/* ---- buttons ---- */
+.th-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--th-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease),
+    opacity var(--th-dur-fast) var(--th-ease);
+}
+
+.th-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.th-btn--primary {
+  background: var(--th-accent);
+  color: var(--th-accent-fg);
+}
+
+.th-btn--primary:hover:not(:disabled) {
+  background: var(--th-accent-hover);
+}
+
+.th-btn--ghost {
+  border: 1px solid var(--th-border);
+  color: var(--th-text-dim);
+  background: transparent;
+}
+
+.th-btn--ghost:hover:not(:disabled) {
+  background: var(--th-hover);
+  border-color: var(--th-border-strong);
+  color: var(--th-text);
+}
+
+.th-btn--danger {
+  background: var(--th-error);
+  color: var(--th-accent);
+}
+
+.th-btn--danger:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+/* ---- alerts ---- */
+.th-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: var(--th-radius-sm);
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid;
+}
+
+.th-alert--error {
+  background: var(--th-error-bg);
+  border-color: var(--th-error);
+  color: var(--th-error);
+}
+
+.th-alert--success {
+  background: var(--th-success-bg);
+  border-color: var(--th-success);
+  color: var(--th-success);
+}
+
+.th-alert--warning {
+  background: var(--th-warning-bg);
+  border-color: var(--th-warning);
+  color: var(--th-warning);
+}
+
+.th-alert svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* ---- fields ---- */
+.th-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.th-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--th-text-dim);
+}
+
+.th-input {
+  height: 38px;
+  padding: 0 12px;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--th-dur-fast) var(--th-ease),
+    box-shadow var(--th-dur-fast) var(--th-ease);
+}
+
+.th-input::placeholder {
+  color: var(--th-faint);
+}
+
+.th-input:focus {
+  border-color: var(--th-accent);
+  box-shadow: 0 0 0 3px var(--th-ring);
+}
+
+.th-input--mono {
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+}
+
+/* ---- folder picker ---- */
+.th-picker-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  color: var(--th-text-dim);
+  overflow: hidden;
+}
+
+.th-picker-path-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.th-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-bg);
+  padding: 5px;
+}
+
+.th-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 4px;
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+  color: var(--th-text-dim);
+  text-align: left;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-picker-row:hover {
+  background: var(--th-hover);
+  color: var(--th-text);
+}
+
+.th-picker-row svg {
+  flex: none;
+  color: var(--th-muted);
+}
+
+.th-picker-row-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.th-picker-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--th-muted);
+  font-size: 13px;
+}
+
+.th-picker-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--th-border-strong);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-surface-raised);
+}
+
+.th-picker-select-path {
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  color: var(--th-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* The action button must never shrink — the path absorbs overflow instead. */
+.th-picker-select .th-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.th-picker-select-hint {
+  font-size: 11px;
+  color: var(--th-muted);
+  flex: none;
+}
+
+/* ---- confirm summary ---- */
+.th-summary {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  overflow: hidden;
+  background: var(--th-bg);
+}
+
+.th-summary-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+}
+
+.th-summary-row + .th-summary-row {
+  border-top: 1px solid var(--th-border);
+}
+
+.th-summary-key {
+  flex: none;
+  width: 84px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+  padding-top: 2px;
+}
+
+.th-summary-val {
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+  color: var(--th-text);
+  word-break: break-all;
+}
+
+/* ---- login card ---- */
+.th-login {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% -5%, var(--th-glow), transparent),
+    var(--th-bg);
+}
+
+.th-login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 34px 32px 28px;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  box-shadow: var(--th-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: th-modal-in var(--th-dur-slow) var(--th-ease);
+}
+
+.th-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--th-muted);
+}
+
+.th-login-brand-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--th-success);
+  box-shadow: 0 0 10px var(--th-success);
+  animation: th-pulse 2.4s var(--th-ease) infinite;
+}
+
+.th-login-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--th-text);
+}
+
+.th-login-sub {
+  margin-top: -10px;
+  font-size: 13px;
+  color: var(--th-muted);
+}
+
+.th-login-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--th-faint);
+}
+
+.th-login-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--th-muted);
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-login-lang:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+}

@@ -1,0 +1,65 @@
+/* Oh My Terminal — design tokens (dark, Vercel-style monochrome) */
+:root {
+  /* surfaces */
+  --th-bg: #0a0a0a;
+  --th-surface: #141414;
+  --th-surface-raised: #1a1a1a;
+  --th-hover: #1f1f1f;
+  --th-active: #262626;
+
+  /* lines */
+  --th-border: #2a2a2a;
+  --th-border-strong: #3a3a3a;
+
+  /* text */
+  --th-text: #ededed;
+  --th-text-dim: #b3b3b3;
+  --th-muted: #888888;
+  --th-faint: #5c5c5c;
+
+  /* accent — inverted monochrome */
+  --th-accent: #ffffff;
+  --th-accent-fg: #0a0a0a;
+  --th-accent-hover: #e2e2e2;
+
+  /* status */
+  --th-error: #e5484d;
+  --th-error-bg: rgba(229, 72, 77, 0.12);
+  --th-success: #30a46c;
+  --th-success-bg: rgba(48, 164, 108, 0.12);
+  --th-warning: #f5a623;
+  --th-warning-bg: rgba(245, 166, 35, 0.12);
+  --th-ring: rgba(255, 255, 255, 0.08);
+  --th-glow: rgba(255, 255, 255, 0.06);
+
+  /* geometry */
+  --th-radius-sm: 6px;
+  --th-radius: 8px;
+  --th-radius-lg: 12px;
+
+  /* typography */
+  --th-font-mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+  --th-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+    "Helvetica Neue", Arial, sans-serif;
+
+  /* layout */
+  --th-sidebar-w: 288px;
+  --th-sidebar-w-collapsed: 0px;
+  --th-header-h: 44px;
+  --th-node-h: 34px;
+
+  /* motion */
+  --th-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --th-dur-fast: 120ms;
+  --th-dur: 180ms;
+  --th-dur-slow: 260ms;
+
+  /* depth */
+  --th-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --th-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
+  --th-shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.7);
+  --th-backdrop: rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}

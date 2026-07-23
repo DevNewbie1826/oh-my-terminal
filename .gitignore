@@ -1,0 +1,15 @@
+# OS / tooling
+.DS_Store
+.omo/
+.senpi/
+
+# Build artifacts
+bin/
+node_modules/
+frontend/dist/assets/
+frontend/dist/index.html
+frontend/dist/*.js
+frontend/dist/*.css
+*.test
+*.prof
+.env

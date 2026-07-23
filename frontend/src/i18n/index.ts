@@ -1,0 +1,53 @@
+import { createContext, useContext } from "react";
+import type { FontId } from "../lib/font";
+import en from "./locales/en.json";
+import ko from "./locales/ko.json";
+
+export type Lang = "en" | "ko";
+
+export interface I18nValue {
+  readonly lang: Lang;
+  readonly setLang: (lang: Lang) => void;
+  readonly font: FontId;
+  readonly setFont: (font: FontId) => void;
+  /** Translate a key; `{name}` placeholders are filled from vars. */
+  readonly t: (key: string, vars?: Readonly<Record<string, string | number>>) => string;
+}
+
+const tables: Readonly<Record<Lang, Readonly<Record<string, string>>>> = { en, ko };
+
+export const I18nContext = createContext<I18nValue>({
+  lang: "en",
+  setLang: () => undefined,
+  font: "system",
+  setFont: () => undefined,
+  t: (key) => key,
+});
+
+export function useT(): I18nValue {
+  return useContext(I18nContext);
+}
+
+const STORAGE_KEY = "th-lang";
+
+export function detectLang(): Lang {
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === "en" || stored === "ko") return stored;
+  return navigator.language.toLowerCase().startsWith("ko") ? "ko" : "en";
+}
+
+export function persistLang(lang: Lang): void {
+  window.localStorage.setItem(STORAGE_KEY, lang);
+}
+
+export function translate(
+  lang: Lang,
+  key: string,
+  vars?: Readonly<Record<string, string | number>>,
+): string {
+  const template = tables[lang][key] ?? tables.en[key] ?? key;
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    name in vars ? String(vars[name]) : match,
+  );
+}
