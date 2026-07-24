@@ -7,7 +7,7 @@ export interface SessionPickerProps {
   readonly workspaces: readonly Workspace[];
   /** Session ids already placed in some pane (excluded from the list). */
   readonly placed: ReadonlySet<string>;
-  readonly onAssign: (wsId: string, tmId: string) => void;
+  readonly onAssign: (tmId: string) => void;
   readonly onCreateTerminal: (wsId: string) => void;
 }
 
@@ -41,7 +41,7 @@ export function SessionPicker({ workspaces, placed, onAssign, onCreateTerminal }
                   key={tm.id}
                   type="button"
                   className="th-picker-pane-item"
-                  onClick={() => onAssign(ws.id, tm.id)}
+                  onClick={() => onAssign(tm.id)}
                 >
                   <IconTerminal size={13} />
                   <span>{tm.name}</span>

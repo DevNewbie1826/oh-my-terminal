@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useT } from "../i18n";
 import { SessionTree } from "./SessionTree";
 import type { ToastKind } from "./SessionTree";
-import { IconChevron, IconGlobe, IconLogOut, IconPlus, IconTerminal, IconX } from "./icons";
+import { IconChevron, IconLogOut, IconPlus, IconX } from "./icons";
+import { SettingsMenu } from "./SettingsMenu";
 import type { Terminal, Workspace } from "../features/workspace/workspace";
-import { FONT_PRESETS } from "../lib/font";
 import { useMediaQuery } from "../lib/useMediaQuery";
+import { SystemStatsModal } from "../features/system/SystemStatsModal";
 
 export interface SidebarProps {
   readonly collapsed: boolean;
@@ -47,9 +49,9 @@ export function Sidebar({
   onLogout,
   notify,
 }: SidebarProps) {
-  const { t, lang, setLang, font, setFont } = useT();
+  const { t } = useT();
   const isMobile = useMediaQuery(MOBILE_QUERY);
-
+  const [statsOpen, setStatsOpen] = useState(false);
   return (
     <>
       {isMobile && !collapsed && <div className="th-backdrop" onClick={onToggleCollapse} />}
@@ -112,34 +114,7 @@ export function Sidebar({
           </div>
 
           <div className="th-sidebar-footer">
-            <label className="th-sidebar-lang">
-              <IconGlobe size={13} />
-              <select
-                value={lang}
-                aria-label={t("sidebar.language")}
-                onChange={(ev) => setLang(ev.target.value === "ko" ? "ko" : "en")}
-              >
-                <option value="en">EN</option>
-                <option value="ko">KO</option>
-              </select>
-            </label>
-            <label className="th-sidebar-lang">
-              <IconTerminal size={13} />
-              <select
-                value={font}
-                aria-label={t("sidebar.font")}
-                onChange={(ev) => {
-                  const preset = FONT_PRESETS.find((p) => p.id === ev.target.value);
-                  if (preset) setFont(preset.id);
-                }}
-              >
-                {FONT_PRESETS.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {t(p.labelKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SettingsMenu onOpenStats={() => setStatsOpen(true)} />
             <div className="th-sidebar-footer-spacer" />
             <button
               type="button"
@@ -162,6 +137,7 @@ export function Sidebar({
           <IconChevron size={13} />
         </button>
       </aside>
+      <SystemStatsModal open={statsOpen} onClose={() => setStatsOpen(false)} />
     </>
   );
 }

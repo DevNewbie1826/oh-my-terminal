@@ -46,6 +46,17 @@ func NewSession(ctx context.Context, name, workdir string) error {
 	return err
 }
 
+// EnableMouse turns on tmux mouse support so a web terminal can scroll the
+// tmux scrollback (copy-mode) with the wheel or touch. tmux runs on the
+// alternate screen, which has no scrollback of its own; without mouse mode a
+// terminal emulator converts wheel/touch drags into arrow keys that tmux
+// ignores, so scrolling appears dead. Failures are non-fatal: the session
+// still attaches, just without mouse scrolling.
+func EnableMouse(ctx context.Context) error {
+	_, err := run(ctx, "set-option", "-g", "mouse", "on")
+	return err
+}
+
 // KillSession terminates a session; killing a missing session is not an error.
 func KillSession(ctx context.Context, name string) error {
 	out, err := run(ctx, "kill-session", "-t", name)

@@ -14,7 +14,7 @@ A single-binary web app for managing tmux-based terminals from your browser.
 - **화면 분할** — 가로/세로로 페인을 나눠 여러 세션을 한 화면에 배치 (1024px 이상)
 - **워크스페이스** — 프로젝트별로 터미널을 그룹화
 - **파일 브라우저** — 파일 탐색, 업로드(드래그&드롭), 다운로드, 인라인 에디터
-- **폰트 선택** — D2Coding, JetBrains Mono, Fira Code, IBM Plex Mono, Source Code Pro, 나눔고딕코딩
+- **폰트 선택** — 시스템, JetBrains Mono, Fira Code, IBM Plex Mono, Source Code Pro, 나눔고딕코딩
 - **다국어** — 한국어 / English
 - **모바일 대응** — iOS Safari WebSocket 안정화 (하트비트 + 자동 재연결)
 - **레이아웃 영속화** — 분할 레이아웃이 서버에 저장되어 재접속 시 복원
@@ -63,7 +63,7 @@ make build
 - **Split panes** — horizontal/vertical splitting to view multiple sessions at once (1024px+)
 - **Workspaces** — group terminals by project
 - **File browser** — browse, drag-and-drop upload, download, inline editor
-- **Font picker** — D2Coding, JetBrains Mono, Fira Code, IBM Plex Mono, Source Code Pro, Nanum Gothic Coding
+- **Font picker** — System, JetBrains Mono, Fira Code, IBM Plex Mono, Source Code Pro, Nanum Gothic Coding
 - **i18n** — Korean / English
 - **Mobile support** — iOS Safari WebSocket stability (heartbeat + auto-reconnect)
 - **Layout persistence** — split layout saved server-side, restored on reconnect

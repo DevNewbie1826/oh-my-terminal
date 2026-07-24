@@ -1,14 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
-import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "@xterm/addon-fit";
-import { WebLinksAddon } from "@xterm/addon-web-links";
-import "@xterm/xterm/css/xterm.css";
+import { useRef, useState } from "react";
 import { useT } from "../../i18n";
-import { connectWs } from "../../lib/ws";
-import type { WsConn } from "../../lib/ws";
 import { FONT_PRESETS, SYSTEM_FONT_STACK } from "../../lib/font";
-import { getAttachCmd, wsPath } from "../terminal/terminal";
+import { getAttachCmd } from "../terminal/terminal";
 import { FileBrowser } from "../terminal/FileBrowser";
 import {
   IconCopy,
@@ -21,6 +14,13 @@ import {
 } from "../../components/icons";
 import type { ToastKind } from "../../components/SessionTree";
 import type { SplitDir } from "./paneTree";
+import { useTerminal } from "./useTerminal";
+import type { ConnStatus } from "./useTerminal";
+import { useFilesResize } from "./useFilesResize";
+import { MobileInputOverlay } from "./MobileInputOverlay";
+import { useMediaQuery } from "../../lib/useMediaQuery";
+import { MOBILE_QUERY } from "../../components/Sidebar";
+import { HANDLE_OUTSET } from "./useFilesResize";
 
 export interface TerminalPaneProps {
   readonly wsId: string;
@@ -37,68 +37,6 @@ export interface TerminalPaneProps {
   readonly notify: (msg: string, kind?: ToastKind) => void;
 }
 
-type ConnStatus = "connecting" | "open" | "reconnecting" | "closed";
-
-const FILES_DEFAULT_W = 320;
-const FILES_MIN_W = 220;
-const RESIZE_STEP = 24;
-const FILES_WIDTH_KEY = "th-files-w";
-/** The 5px resize handle straddles the panel edge; this many px sit outside it. */
-const HANDLE_OUTSET = 3;
-
-/** WebSocket codes for a clean server-side close (PTY ended), not a drop. */
-const CLOSE_NORMAL = 1000;
-const CLOSE_GOING_AWAY = 1001;
-
-function isCleanClose(code: number): boolean {
-  return code === CLOSE_NORMAL || code === CLOSE_GOING_AWAY;
-}
-
-function clampFilesWidth(w: number): number {
-  return Math.max(FILES_MIN_W, w);
-}
-
-function storedFilesWidth(): number {
-  const raw = window.localStorage.getItem(FILES_WIDTH_KEY);
-  const parsed = raw === null ? Number.NaN : Number.parseInt(raw, 10);
-  return Number.isFinite(parsed) ? clampFilesWidth(parsed) : FILES_DEFAULT_W;
-}
-
-const XTERM_THEME = {
-  background: "#0a0a0a",
-  foreground: "#ededed",
-  cursor: "#ededed",
-  cursorAccent: "#0a0a0a",
-  selectionBackground: "rgba(255, 255, 255, 0.22)",
-  black: "#0a0a0a",
-  red: "#e5484d",
-  green: "#30a46c",
-  yellow: "#f5a623",
-  blue: "#3b82f6",
-  magenta: "#a855f7",
-  cyan: "#06b6d4",
-  white: "#ededed",
-  brightBlack: "#5c5c5c",
-  brightRed: "#ff6b6e",
-  brightGreen: "#4cc38a",
-  brightYellow: "#ffd166",
-  brightBlue: "#60a5fa",
-  brightMagenta: "#c084fc",
-  brightCyan: "#22d3ee",
-  brightWhite: "#ffffff",
-};
-
-function isOutputMsg(m: unknown): m is { readonly type: "output"; readonly data: string } {
-  return (
-    typeof m === "object" &&
-    m !== null &&
-    "type" in m &&
-    m.type === "output" &&
-    "data" in m &&
-    typeof m.data === "string"
-  );
-}
-
 /** A single xterm.js pane bridged to the backend PTY over WebSocket. */
 export function TerminalPane({
   wsId,
@@ -113,165 +51,22 @@ export function TerminalPane({
   onOpenSidebar,
   notify,
 }: TerminalPaneProps) {
-  const { t, font } = useT();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const connRef = useRef<WsConn | null>(null);
-  const termRef = useRef<Terminal | null>(null);
-  const fitRef = useRef<FitAddon | null>(null);
-  const [status, setStatus] = useState<ConnStatus>("connecting");
-  const [showFiles, setShowFiles] = useState(false);
-  const [filesWidth, setFilesWidth] = useState(storedFilesWidth);
-  const [resizing, setResizing] = useState(false);
-  const dragRef = useRef<{ readonly startX: number; readonly startWidth: number } | null>(null);
+  const { t, font, fontSize } = useT();
   const stack = FONT_PRESETS.find((p) => p.id === font)?.stack ?? SYSTEM_FONT_STACK;
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const term = new Terminal({
-      fontFamily: stack,
-      fontSize: 13,
-      lineHeight: 1.25,
-      cursorBlink: true,
-      cursorStyle: "bar",
-      scrollback: 5000,
-      allowProposedApi: true,
-      theme: XTERM_THEME,
-    });
-    const fit = new FitAddon();
-    term.loadAddon(fit);
-    term.loadAddon(new WebLinksAddon());
-    term.open(el);
-    termRef.current = term;
-    fitRef.current = fit;
-
-    const safeFit = (): void => {
-      try {
-        fit.fit();
-      } catch {
-        /* container not measurable yet */
-      }
-    };
-    safeFit();
-
-    const sendResize = (): void => {
-      connRef.current?.send({ type: "resize", cols: term.cols, rows: term.rows });
-    };
-
-    const conn = connectWs(
-      wsPath(wsId, tmId),
-      {
-        onOpen: () => {
-          setStatus("open");
-          safeFit();
-          sendResize();
-          term.focus();
-        },
-        onMessage: (msg) => {
-          if (isOutputMsg(msg)) term.write(msg.data);
-        },
-        onClose: (code) => {
-          setStatus(isCleanClose(code) ? "closed" : "reconnecting");
-        },
-      },
-      { reconnect: (code) => !isCleanClose(code) },
-    );
-    connRef.current = conn;
-
-    const dataSub = term.onData((data) => {
-      conn.send({ type: "input", data });
-    });
-
-    const ro = new ResizeObserver(() => {
-      safeFit();
-      sendResize();
-    });
-    ro.observe(el);
-
-    return () => {
-      ro.disconnect();
-      dataSub.dispose();
-      conn.close();
-      connRef.current = null;
-      termRef.current = null;
-      fitRef.current = null;
-      term.dispose();
-    };
-  }, [wsId, tmId]);
-
-  // Apply font changes without recreating the terminal (preserves scrollback).
-  // A new font changes cell metrics, so cols/rows change — refit and tell the
-  // PTY, otherwise the shell keeps the old geometry.
-  useEffect(() => {
-    const term = termRef.current;
-    const fit = fitRef.current;
-    if (!term || !fit) return;
-    term.options.fontFamily = stack;
-    try {
-      fit.fit();
-    } catch {
-      /* container not measurable yet */
-      return;
-    }
-    connRef.current?.send({ type: "resize", cols: term.cols, rows: term.rows });
-  }, [font, stack]);
-
-  // Keep the xterm focused when this pane gains app focus.
-  useEffect(() => {
-    if (focused) termRef.current?.focus();
-  }, [focused]);
-
-  const onResizePointerDown = (ev: ReactPointerEvent<HTMLDivElement>): void => {
-    ev.preventDefault();
-    dragRef.current = { startX: ev.clientX, startWidth: filesWidth };
-    setResizing(true);
-    ev.currentTarget.setPointerCapture(ev.pointerId);
-  };
-
-  const onResizePointerMove = (ev: ReactPointerEvent<HTMLDivElement>): void => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    // Panel is right-anchored: dragging left grows it.
-    const next = clampFilesWidth(drag.startWidth + (drag.startX - ev.clientX));
-    setFilesWidth(next);
-  };
-
-  const endResize = (ev: ReactPointerEvent<HTMLDivElement>): void => {
-    const drag = dragRef.current;
-    if (!drag) return;
-    dragRef.current = null;
-    setResizing(false);
-    // Recompute from the drag origin so the persisted width matches the final
-    // pointer position exactly (the filesWidth state lags the last move).
-    const final = clampFilesWidth(drag.startWidth + (drag.startX - ev.clientX));
-    setFilesWidth(final);
-    window.localStorage.setItem(FILES_WIDTH_KEY, String(final));
-    ev.currentTarget.releasePointerCapture(ev.pointerId);
-  };
-
-  const resetFilesWidth = (): void => {
-    setFilesWidth(FILES_DEFAULT_W);
-    window.localStorage.setItem(FILES_WIDTH_KEY, String(FILES_DEFAULT_W));
-  };
-
-  const onResizeKeyDown = (ev: ReactKeyboardEvent<HTMLDivElement>): void => {
-    // Panel is right-anchored: ArrowLeft grows, ArrowRight shrinks.
-    let delta = 0;
-    if (ev.key === "ArrowLeft") delta = RESIZE_STEP;
-    else if (ev.key === "ArrowRight") delta = -RESIZE_STEP;
-    else if (ev.key === "Home") {
-      ev.preventDefault();
-      resetFilesWidth();
-      return;
-    } else {
-      return;
-    }
-    ev.preventDefault();
-    const next = clampFilesWidth(filesWidth + delta);
-    setFilesWidth(next);
-    window.localStorage.setItem(FILES_WIDTH_KEY, String(next));
-  };
+  const { containerRef, termRef, status } = useTerminal({ wsId, tmId, stack, fontSize, focused });
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  const mobileInputRef = useRef<HTMLTextAreaElement>(null);
+  const [showFiles, setShowFiles] = useState(false);
+  const [keysOpen, setKeysOpen] = useState(false);
+  const {
+    filesWidth,
+    resizing,
+    onResizePointerDown,
+    onResizePointerMove,
+    endResize,
+    resetFilesWidth,
+    onResizeKeyDown,
+  } = useFilesResize();
 
   const copyAttach = async (): Promise<void> => {
     try {
@@ -293,13 +88,24 @@ export function TerminalPane({
   return (
     <div
       className={`th-stage th-pane${focused ? " th-pane--focused" : ""}`}
-      onPointerDown={onFocus}
+      onPointerDown={() => {
+        onFocus();
+        // Desktop: focus xterm's own textarea so typing reaches the PTY.
+        // Mobile: do NOT focus the input bar here — the keyboard should only
+        // open when the user taps the input bar itself, not the terminal. The
+        // bar's textarea raises the keyboard natively on its own tap (iOS only
+        // opens it synchronously inside a user gesture on the focused field).
+        if (!isMobile) {
+          termRef.current?.focus();
+        }
+      }}
     >
       <header className="th-termhead">
         <button
           type="button"
           className="th-btn-icon th-mobile-menu"
           title={t("sidebar.expand")}
+          aria-label={t("sidebar.expand")}
           onClick={onOpenSidebar}
         >
           <IconMenu size={16} />
@@ -361,8 +167,19 @@ export function TerminalPane({
         </div>
       </header>
 
-      <div className={`th-stage-row${resizing ? " th-stage-row--resizing" : ""}`}>
+      <div
+        className={`th-stage-row${resizing ? " th-stage-row--resizing" : ""}${isMobile && keysOpen ? " th-stage-row--keys" : ""}`}
+      >
         <div ref={containerRef} className="th-term" />
+        {isMobile && (
+          <MobileInputOverlay
+            inputRef={mobileInputRef}
+            termRef={termRef}
+            focused={focused}
+            keysOpen={keysOpen}
+            onKeysToggle={() => setKeysOpen((v) => !v)}
+          />
+        )}
         {showFiles && (
           <>
             <div

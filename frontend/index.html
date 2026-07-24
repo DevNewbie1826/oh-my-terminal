@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -10,6 +10,33 @@
     rel="stylesheet"
   />
   <title>Oh My Terminal</title>
+  <script>
+    // Track the visual viewport at parse time (before first paint):
+    //  - --th-vh-unit: 1% of the visible height. iOS reports 1vh as the max
+    //    viewport behind the URL bar, which otherwise overflows on first load.
+    //  - --th-vv-top / --th-vv-left: the visual viewport's pan offset. When
+    //    the keyboard opens, iOS pans the visual viewport to keep the focused
+    //    input visible; #root translates by this offset to stay glued to the
+    //    visible region instead of being carried off-screen (see global.css).
+    (function () {
+      var rootStyle = document.documentElement.style;
+      var set = function () {
+        var vv = window.visualViewport;
+        var h = vv ? vv.height : window.innerHeight;
+        rootStyle.setProperty("--th-vh-unit", h * 0.01 + "px");
+        rootStyle.setProperty("--th-vv-top", vv ? vv.offsetTop + "px" : "0px");
+        rootStyle.setProperty("--th-vv-left", vv ? vv.offsetLeft + "px" : "0px");
+      };
+      set();
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", set);
+        window.visualViewport.addEventListener("scroll", set);
+      }
+      window.addEventListener("scroll", set, { passive: true });
+      window.addEventListener("orientationchange", set);
+      window.addEventListener("pageshow", set);
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>

@@ -19,7 +19,7 @@ export interface LayoutApi {
   readonly focusedPaneId: string;
   readonly placed: ReadonlySet<string>;
   readonly focusPane: (paneId: string) => void;
-  readonly assignSession: (paneId: string, wsId: string, tmId: string) => void;
+  readonly assignSession: (paneId: string, tmId: string) => void;
   readonly split: (paneId: string, dir: SplitDir) => void;
   readonly closePane: (paneId: string) => void;
   readonly changeRatio: (splitId: string, ratio: number) => void;
@@ -39,15 +39,18 @@ const PERSIST_DEBOUNCE_MS = 250;
  * synchronously — never inside a setState updater, which React may call
  * multiple times.
  */
-export function useLayout(): LayoutApi {
+export function useLayout(authed: boolean): LayoutApi {
   const [root, setRoot] = useState<PaneNode>(() => leaf(null));
   const [focusedPaneId, setFocusedPaneId] = useState<string>(() => firstLeafId(root));
   const [placed, setPlaced] = useState<ReadonlySet<string>>(() => new Set());
   const rootRef = useRef(root);
   const saveTimer = useRef(0);
 
-  // Restore the persisted layout once on mount.
+  // Restore the persisted layout once authenticated. The layout lives behind
+  // the auth middleware, so a fetch before login fails with 401; re-running
+  // on the authed transition picks it up after a fresh login.
   useEffect(() => {
+    if (!authed) return;
     let cancelled = false;
     void getLayout()
       .then((blob) => {
@@ -65,7 +68,7 @@ export function useLayout(): LayoutApi {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authed]);
 
   const persist = useCallback((next: PaneNode) => {
     window.clearTimeout(saveTimer.current);
@@ -92,7 +95,7 @@ export function useLayout(): LayoutApi {
   }, []);
 
   const assignSession = useCallback(
-    (paneId: string, _wsId: string, tmId: string) => {
+    (paneId: string, tmId: string) => {
       // A session lives in exactly one pane; unplace it elsewhere first.
       const cleared = removeSession(rootRef.current, tmId);
       commit(setLeafSession(cleared, paneId, tmId));

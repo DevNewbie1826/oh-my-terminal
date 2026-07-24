@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { I18nContext, detectLang, persistLang, translate } from "./i18n";
 import type { I18nValue, Lang } from "./i18n";
-import { detectFont, persistFont } from "./lib/font";
+import { detectFont, detectFontSize, persistFont, persistFontSize } from "./lib/font";
 import type { FontId } from "./lib/font";
 import { useMediaQuery } from "./lib/useMediaQuery";
 import { checkAuth, logout } from "./features/auth/auth";
@@ -11,21 +11,19 @@ import type { ToastKind } from "./components/SessionTree";
 import { WorkspaceWizard } from "./features/workspace/WorkspaceWizard";
 import { TerminalPane } from "./features/split/TerminalPane";
 import { SplitView } from "./features/split/SplitView";
-import type { SessionRef } from "./features/split/SplitView";
 import type { SplitActions } from "./features/split/SplitView";
 import { useLayout } from "./features/split/useLayout";
 import { findLeaf } from "./features/split/paneTree";
-import { createTerminal, deleteTerminal, renameTerminal } from "./features/terminal/terminal";
-import {
-  deleteWorkspace,
-  listWorkspaces,
-  renameWorkspace,
-} from "./features/workspace/workspace";
+import { createTerminal } from "./features/terminal/terminal";
 import type { Terminal, Workspace } from "./features/workspace/workspace";
+import { useWorkspaces } from "./features/workspace/useWorkspaces";
 import { IconMenu } from "./components/icons";
+import { useConfirm } from "./components/ConfirmDialog";
 
 /** Viewport width at or above which split-pane mode is offered. */
 const SPLIT_QUERY = "(min-width: 1024px)";
+/** How long a toast stays visible before auto-dismissing. */
+const TOAST_DISMISS_MS = 2600;
 
 interface Toast {
   readonly id: number;
@@ -44,18 +42,21 @@ export function App() {
     setFontState(next);
     persistFont(next);
   }, []);
+  const [fontSize, setFontSizeState] = useState(detectFontSize);
+  const setFontSize = useCallback((next: number) => {
+    setFontSizeState(next);
+    persistFontSize(next);
+  }, []);
   const t = useCallback(
     (key: string, vars?: Readonly<Record<string, string | number>>) => translate(lang, key, vars),
     [lang],
   );
   const i18n = useMemo<I18nValue>(
-    () => ({ lang, setLang, font, setFont, t }),
-    [lang, setLang, font, setFont, t],
+    () => ({ lang, setLang, font, setFont, fontSize, setFontSize, t }),
+    [lang, setLang, font, setFont, fontSize, setFontSize, t],
   );
 
   const [authed, setAuthed] = useState<boolean | null>(null);
-  const [workspaces, setWorkspaces] = useState<readonly Workspace[]>([]);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [wizardOpen, setWizardOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => window.matchMedia(MOBILE_QUERY).matches,
@@ -63,45 +64,28 @@ export function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const splitEnabled = useMediaQuery(SPLIT_QUERY);
 
-  const layout = useLayout();
+  const layout = useLayout(authed === true);
 
   const toastId = useRef(0);
   const notify = useCallback((msg: string, kind: ToastKind = "info") => {
     setToast({ id: ++toastId.current, msg, kind });
   }, []);
+  const { confirm, dialog: confirmDialog } = useConfirm(t);
+  const {
+    workspaces, setWorkspaces, expanded, setExpanded, sessions,
+    load, toggleExpanded, handleAddTerminal, handleDeleteWorkspace,
+    handleDeleteTerminal, handleRenameWorkspace, handleRenameTerminal,
+  } = useWorkspaces({ notify, t, layout, confirm });
 
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 2600);
+    const timer = window.setTimeout(() => setToast(null), TOAST_DISMISS_MS);
     return () => window.clearTimeout(timer);
   }, [toast]);
 
   useEffect(() => {
     document.title = t("app.title");
   }, [t]);
-
-  // Track the visual viewport and publish it as a per-1% unit. On iOS the
-  // visual viewport shrinks for the dynamic URL bar and the on-screen
-  // keyboard, so `calc(var(--th-vh-unit) * 100)` always equals the visible
-  // area — the app shell and the fixed sidebar drawer size to it exactly.
-  useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const apply = (): void => {
-      document.documentElement.style.setProperty("--th-vh-unit", `${vv.height * 0.01}px`);
-    };
-    apply();
-    vv.addEventListener("resize", apply);
-    return () => vv.removeEventListener("resize", apply);
-  }, []);
-
-  const load = useCallback(async (): Promise<void> => {
-    try {
-      setWorkspaces(await listWorkspaces());
-    } catch {
-      /* transient failure — tree stays empty until next mutation */
-    }
-  }, []);
 
   useEffect(() => {
     void checkAuth().then((ok) => {
@@ -125,16 +109,6 @@ export function App() {
     }
   };
 
-  const sessions = useMemo(() => {
-    const map = new Map<string, SessionRef>();
-    for (const ws of workspaces) {
-      for (const tm of ws.terminals) {
-        map.set(tm.id, { wsId: ws.id, tmId: tm.id, name: tm.name, path: ws.path });
-      }
-    }
-    return map;
-  }, [workspaces]);
-
   // The session shown in the focused pane (drives single mode + sidebar highlight).
   const focusedLeaf = findLeaf(layout.root, layout.focusedPaneId);
   const focusedSessionId =
@@ -147,78 +121,8 @@ export function App() {
     // If the session is already placed, focus its pane; otherwise place it in
     // the focused pane.
     if (!layout.focusSession(tm.id)) {
-      layout.assignSession(layout.focusedPaneId, ws.id, tm.id);
+      layout.assignSession(layout.focusedPaneId, tm.id);
     }
-  };
-
-  const toggleExpanded = (wsId: string): void => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(wsId)) next.delete(wsId);
-      else next.add(wsId);
-      return next;
-    });
-  };
-
-  const handleAddTerminal = async (ws: Workspace): Promise<void> => {
-    try {
-      const tm = await createTerminal(ws.id, "");
-      setWorkspaces((prev) =>
-        prev.map((w) => (w.id === ws.id ? { ...w, terminals: [...w.terminals, tm] } : w)),
-      );
-      setExpanded((prev) => new Set(prev).add(ws.id));
-      layout.assignSession(layout.focusedPaneId, ws.id, tm.id);
-      notify(t("toast.terminalAdded"), "success");
-    } catch {
-      notify(t("toast.error"), "error");
-    }
-  };
-
-  const handleDeleteWorkspace = async (ws: Workspace): Promise<void> => {
-    if (!window.confirm(t("sidebar.confirmDeleteWs", { name: ws.name }))) return;
-    try {
-      await deleteWorkspace(ws.id);
-      // Unplace every session in the workspace, then drop it.
-      for (const tm of ws.terminals) layout.unplaceSession(tm.id);
-      setWorkspaces((prev) => prev.filter((w) => w.id !== ws.id));
-      notify(t("toast.workspaceDeleted"), "success");
-    } catch {
-      notify(t("toast.error"), "error");
-    }
-  };
-
-  const handleDeleteTerminal = async (ws: Workspace, tm: Terminal): Promise<void> => {
-    if (!window.confirm(t("sidebar.confirmDeleteTm", { name: tm.name }))) return;
-    try {
-      await deleteTerminal(ws.id, tm.id);
-      setWorkspaces((prev) =>
-        prev.map((w) =>
-          w.id === ws.id ? { ...w, terminals: w.terminals.filter((x) => x.id !== tm.id) } : w,
-        ),
-      );
-      layout.unplaceSession(tm.id);
-      notify(t("toast.terminalDeleted"), "success");
-    } catch {
-      notify(t("toast.error"), "error");
-    }
-  };
-
-  const handleRenameWorkspace = async (ws: Workspace, name: string): Promise<void> => {
-    const updated = await renameWorkspace(ws.id, name);
-    setWorkspaces((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
-    notify(t("toast.workspaceRenamed"), "success");
-  };
-
-  const handleRenameTerminal = async (ws: Workspace, tm: Terminal, name: string): Promise<void> => {
-    const updated = await renameTerminal(ws.id, tm.id, name);
-    setWorkspaces((prev) =>
-      prev.map((w) =>
-        w.id === ws.id
-          ? { ...w, terminals: w.terminals.map((x) => (x.id === updated.id ? updated : x)) }
-          : w,
-      ),
-    );
-    notify(t("toast.terminalRenamed"), "success");
   };
 
   const createTerminalInPane = useCallback(
@@ -228,7 +132,7 @@ export function App() {
           setWorkspaces((prev) =>
             prev.map((w) => (w.id === wsId ? { ...w, terminals: [...w.terminals, tm] } : w)),
           );
-          layout.assignSession(paneId, wsId, tm.id);
+          layout.assignSession(paneId, tm.id);
           notify(t("toast.terminalAdded"), "success");
         })
         .catch(() => notify(t("toast.error"), "error"));
@@ -303,6 +207,7 @@ export function App() {
                   type="button"
                   className="th-btn-icon th-mobile-menu"
                   title={t("sidebar.expand")}
+                  aria-label={t("sidebar.expand")}
                   onClick={() => setSidebarCollapsed(false)}
                 >
                   <IconMenu size={16} />
@@ -336,6 +241,7 @@ export function App() {
           {toast.msg}
         </div>
       )}
+      {confirmDialog}
     </I18nContext.Provider>
   );
 }

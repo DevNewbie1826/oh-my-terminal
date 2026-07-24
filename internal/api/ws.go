@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/creack/pty"
 	"github.com/lxzan/gws"
+	"github.com/oh-my-terminal/oh-my-terminal/internal/tmux"
 )
 
 const (
@@ -71,6 +73,12 @@ func (s *Server) OnOpen(socket *gws.Conn) {
 	if !ok || name == "" {
 		_ = socket.WriteClose(1011, []byte("invalid session"))
 		return
+	}
+	// Enable mouse support so wheel/touch drags scroll the tmux scrollback
+	// (copy-mode) instead of being converted to arrow keys tmux ignores.
+	// Best-effort: attach proceeds even if this fails.
+	if err := tmux.EnableMouse(context.Background()); err != nil {
+		s.logger.Warn("enabling tmux mouse mode", "err", err)
 	}
 	cmd := exec.Command("tmux", "attach", "-t", name)
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: defaultRows, Cols: defaultCols})

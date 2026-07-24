@@ -11,5 +11,7 @@ frontend/dist/index.html
 frontend/dist/*.js
 frontend/dist/*.css
 *.test
+omt
+.qa/
 *.prof
 .env

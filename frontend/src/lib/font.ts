@@ -62,3 +62,24 @@ export function detectFont(): FontId {
 export function persistFont(id: FontId): void {
   window.localStorage.setItem(STORAGE_KEY, id);
 }
+
+/** Terminal font size bounds (px). */
+export const FONT_SIZE_MIN = 10;
+export const FONT_SIZE_MAX = 24;
+export const FONT_SIZE_DEFAULT = 13;
+
+const SIZE_STORAGE_KEY = "th-font-size";
+
+export function clampFontSize(size: number): number {
+  return Math.min(FONT_SIZE_MAX, Math.max(FONT_SIZE_MIN, size));
+}
+
+export function detectFontSize(): number {
+  const raw = window.localStorage.getItem(SIZE_STORAGE_KEY);
+  const parsed = raw === null ? Number.NaN : Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) ? clampFontSize(parsed) : FONT_SIZE_DEFAULT;
+}
+
+export function persistFontSize(size: number): void {
+  window.localStorage.setItem(SIZE_STORAGE_KEY, String(clampFontSize(size)));
+}

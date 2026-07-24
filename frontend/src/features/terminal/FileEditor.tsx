@@ -4,6 +4,7 @@ import { useT } from "../../i18n";
 import { fsRead, fsWrite } from "./terminal";
 import { IconAlert, IconCheck, IconX } from "../../components/icons";
 import type { ToastKind } from "../../components/SessionTree";
+import { useConfirm } from "../../components/ConfirmDialog";
 
 export interface FileEditorProps {
   readonly path: string;
@@ -15,6 +16,7 @@ export interface FileEditorProps {
 /** In-panel text editor: loads a file into a textarea and saves it back. */
 export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
   const { t } = useT();
+  const { confirm, dialog: confirmDialog } = useConfirm(t);
   const [content, setContent] = useState<string | null>(null);
   const [original, setOriginal] = useState("");
   const [loading, setLoading] = useState(true);
@@ -64,10 +66,18 @@ export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
     }
   }, [path, content, dirty, notify, t]);
 
-  const handleClose = useCallback((): void => {
-    if (dirty && !window.confirm(t("editor.discardConfirm"))) return;
+  const handleClose = useCallback(async (): Promise<void> => {
+    if (dirty) {
+      const ok = await confirm({
+        title: t("editor.unsaved"),
+        message: t("editor.discardConfirm"),
+        confirmLabel: t("editor.discard"),
+        danger: true,
+      });
+      if (!ok) return;
+    }
     onClose();
-  }, [dirty, onClose, t]);
+  }, [dirty, onClose, t, confirm]);
 
   const onKeyDown = (ev: KeyboardEvent<HTMLTextAreaElement>): void => {
     if ((ev.metaKey || ev.ctrlKey) && (ev.key === "s" || ev.key === "Enter")) {
@@ -96,7 +106,7 @@ export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
           {saving ? t("editor.saving") : t("editor.save")}
           {!saving && <IconCheck size={13} />}
         </button>
-        <button type="button" className="th-btn-icon" title={t("editor.close")} onClick={handleClose}>
+        <button type="button" className="th-btn-icon" title={t("editor.close")} onClick={() => void handleClose()}>
           <IconX size={14} />
         </button>
       </div>
@@ -107,7 +117,7 @@ export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
             <IconAlert size={15} />
             <span>{error}</span>
           </span>
-          <button type="button" className="th-btn th-btn--ghost" onClick={handleClose}>
+          <button type="button" className="th-btn th-btn--ghost" onClick={() => void handleClose()}>
             {t("editor.close")}
           </button>
         </div>
@@ -125,6 +135,7 @@ export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
           aria-label={name}
         />
       )}
+      {confirmDialog}
     </div>
   );
 }

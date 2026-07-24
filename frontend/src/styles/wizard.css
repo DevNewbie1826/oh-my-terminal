@@ -17,6 +17,7 @@
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   display: flex;
   flex-direction: column;
   background: var(--th-surface);
@@ -25,6 +26,8 @@
   box-shadow: var(--th-shadow-lg);
   outline: none;
   animation: th-modal-in var(--th-dur-slow) var(--th-ease);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 @keyframes th-modal-in {
@@ -58,7 +61,6 @@
   background: var(--th-hover);
 }
 
-/* ---- wizard chrome ---- */
 .th-wizard-head {
   flex: none;
   padding: 22px 24px 0;
@@ -130,7 +132,6 @@
   flex: 1;
 }
 
-/* ---- buttons ---- */
 .th-btn {
   display: inline-flex;
   align-items: center;
@@ -182,7 +183,6 @@
   opacity: 0.88;
 }
 
-/* ---- alerts ---- */
 .th-alert {
   display: flex;
   align-items: flex-start;
@@ -192,6 +192,8 @@
   font-size: 13px;
   line-height: 1.45;
   border: 1px solid;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .th-alert--error {
@@ -217,7 +219,6 @@
   margin-top: 1px;
 }
 
-/* ---- fields ---- */
 .th-field {
   display: flex;
   flex-direction: column;
@@ -257,7 +258,6 @@
   font-size: 13px;
 }
 
-/* ---- folder picker ---- */
 .th-picker-path {
   display: flex;
   align-items: center;
@@ -370,7 +370,6 @@
   flex: none;
 }
 
-/* ---- confirm summary ---- */
 .th-summary {
   display: flex;
   flex-direction: column;
@@ -405,10 +404,10 @@
   font-family: var(--th-font-mono);
   font-size: 13px;
   color: var(--th-text);
-  word-break: break-all;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
-/* ---- login card ---- */
 .th-login {
   height: 100%;
   display: flex;
@@ -480,6 +479,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  /* Never let the footnote squeeze the button onto two lines. */
+  flex: none;
+  white-space: nowrap;
   color: var(--th-muted);
   font-size: 11px;
   padding: 3px 6px;
@@ -491,4 +493,34 @@
 .th-login-lang:hover {
   color: var(--th-text);
   background: var(--th-hover);
+}
+
+.th-confirm {
+  padding: 22px 24px 20px;
+}
+
+.th-confirm-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.th-confirm-message {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--th-muted);
+}
+
+.th-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .th-login-brand-dot {
+    animation: none;
+  }
 }

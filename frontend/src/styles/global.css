@@ -8,9 +8,32 @@
 }
 
 html,
-body,
-#root {
+body {
   height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  /* Pin the entire app to the visual viewport.
+
+     position: fixed anchors to the layout viewport, which on iOS does NOT
+     shrink when the keyboard opens — but the visual viewport does, and iOS
+     additionally pans it (offsetTop grows) to keep the focused input
+     visible. Without compensation the app rides that pan and jumps up by
+     roughly the keyboard height (or more, when iOS over-pans).
+
+     So: size to the visual viewport (--th-vh-unit) and translate by its pan
+     offset (--th-vv-top/left, kept in sync by the inline script in
+     index.html). The app always fills exactly the visible region — the
+     input bar lands on the keyboard's top edge and nothing pans. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: calc(var(--th-vh-unit, 1vh) * 100);
+  overflow: hidden;
+  transform: translate(var(--th-vv-left, 0px), var(--th-vv-top, 0px));
 }
 
 body {
@@ -21,7 +44,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow: hidden;
 }
 
 button {
@@ -58,13 +80,9 @@ ol {
   outline-offset: 1px;
 }
 
-/* ---- app shell ---- */
 .th-app {
   display: flex;
-  /* --th-vh-unit is 1% of window.visualViewport, so this equals the visible
-     area on mobile (URL bar + keyboard aware); falls back to 100% where the
-     API is unavailable. */
-  height: calc(var(--th-vh-unit, 1vh) * 100);
+  height: 100%;
   width: 100%;
   overflow: hidden;
 }
@@ -85,7 +103,6 @@ ol {
   position: relative;
 }
 
-/* ---- terminal header bar ---- */
 .th-termhead {
   height: var(--th-header-h);
   flex: none;
@@ -125,7 +142,6 @@ ol {
   margin-left: auto;
 }
 
-/* ---- empty state ---- */
 .th-empty {
   flex: 1;
   display: flex;
@@ -160,7 +176,6 @@ ol {
   max-width: 340px;
 }
 
-/* ---- toast ---- */
 .th-toast {
   position: fixed;
   left: 50%;
@@ -202,7 +217,6 @@ ol {
   }
 }
 
-/* ---- scrollbars ---- */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -222,14 +236,20 @@ ol {
   background: var(--th-border-strong);
 }
 
-/* ---- responsive ---- */
 @media (max-width: 768px) {
   .th-termhead-path {
     display: none;
   }
+  /* Reserve space for the visible mobile input bar so terminal content
+     is not hidden behind it; more when the special-keys panel is open. */
+  .th-stage-row {
+    padding-bottom: 60px;
+  }
+  .th-stage-row--keys {
+    padding-bottom: 104px;
+  }
 }
 
-/* ---- stage: terminal + optional file panel ---- */
 .th-stage-row {
   flex: 1;
   min-height: 0;
@@ -260,7 +280,6 @@ ol {
   padding: 8px 0 0 8px;
 }
 
-/* ---- connection status pill ---- */
 .th-status {
   display: inline-flex;
   align-items: center;
@@ -298,7 +317,6 @@ ol {
   background: var(--th-error-bg);
 }
 
-/* ---- file browser panel ---- */
 /* The file panel floats over the terminal instead of splitting the view. */
 .th-files {
   position: absolute;
@@ -314,7 +332,6 @@ ol {
   transition: border-color var(--th-dur-fast) var(--th-ease);
 }
 
-/* ---- file panel resize handle ---- */
 .th-files-resize {
   position: absolute;
   top: 0;
@@ -437,7 +454,6 @@ ol {
   color: var(--th-muted);
 }
 
-/* ---- file tree ---- */
 .th-files-chevron {
   flex: none;
   display: inline-flex;
@@ -523,7 +539,8 @@ ol {
   background: var(--th-active);
 }
 
-.th-files-status {
+.th-files-status,
+.th-editor-status {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -535,7 +552,6 @@ ol {
   text-align: center;
 }
 
-/* ---- file name as editor trigger ---- */
 .th-files-name--link {
   text-align: left;
   color: var(--th-text);
@@ -549,7 +565,6 @@ ol {
   text-underline-offset: 2px;
 }
 
-/* ---- in-panel file editor ---- */
 .th-editor {
   flex: 1;
   min-height: 0;
@@ -591,18 +606,6 @@ ol {
   gap: 5px;
 }
 
-.th-editor-status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 22px 14px;
-  color: var(--th-muted);
-  font-size: 12.5px;
-  text-align: center;
-}
-
 .th-editor-area {
   flex: 1;
   min-height: 0;
@@ -625,7 +628,6 @@ ol {
   box-shadow: inset 0 0 0 1px var(--th-border-strong);
 }
 
-/* ---- split panes ---- */
 .th-split {
   display: flex;
   flex: 1;
@@ -673,7 +675,6 @@ ol {
   opacity: 0.85;
 }
 
-/* ---- divider between panes ---- */
 .th-divider {
   flex: none;
   background: var(--th-border);
@@ -696,7 +697,6 @@ ol {
   background: var(--th-accent);
 }
 
-/* ---- empty-pane session picker ---- */
 .th-picker-pane {
   flex: 1;
   display: flex;
@@ -730,13 +730,18 @@ ol {
   max-width: 280px;
 }
 
+.th-picker-pane-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .th-picker-pane-group-label {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
   color: var(--th-faint);
-  margin-bottom: 2px;
 }
 
 .th-picker-pane-item {
@@ -775,3 +780,204 @@ ol {
   color: var(--th-text);
   font-size: 12.5px;
 }
+
+.th-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 20px;
+}
+
+.th-stats-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--th-text);
+}
+
+.th-stats-loading {
+  padding: 18px 0;
+  text-align: center;
+  color: var(--th-muted);
+  font-size: 12.5px;
+}
+
+.th-stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.th-stats-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 10px;
+  border-radius: var(--th-radius-sm);
+  transition: background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-stats-row:hover {
+  background: var(--th-hover);
+}
+
+.th-stats-label {
+  font-size: 12px;
+  color: var(--th-muted);
+}
+
+.th-stats-value {
+  margin: 0;
+  font-family: var(--th-font-mono);
+  font-size: 12.5px;
+  color: var(--th-text);
+  text-align: right;
+}
+
+/* ---- mobile input bar ----
+   A visible chat-style input row at the bottom of the terminal pane. iOS
+   Safari only raises the keyboard for a VISIBLE, real-sized input focused
+   inside a user gesture; xterm's offscreen helper textarea can't do that.
+   Korean composes internally at the text-input layer as long as nothing
+   touches the textarea during typing (no reflow, no DOM writes, no React
+   re-render) — fixed height + internal scroll keeps it untouched. */
+.th-mobile-inputbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--th-bg);
+  border-top: 1px solid var(--th-border);
+  z-index: 5;
+}
+
+/* Collapsible row of keys a mobile keyboard lacks (ESC, arrows, Ctrl-combos,
+   tmux prefix). Horizontal scroll keeps every key reachable on narrow
+   screens without a second line. */
+.th-mobile-keys {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.th-mobile-keys::-webkit-scrollbar {
+  display: none;
+}
+
+.th-mobile-key {
+  flex: none;
+  min-width: 44px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-surface);
+  color: var(--th-text-dim);
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-key:active {
+  background: var(--th-active);
+  transform: scale(0.94);
+}
+
+/* Ctrl-combos get an accent caret so they read as distinct from plain keys. */
+.th-mobile-key--ctrl {
+  color: var(--th-accent);
+}
+
+.th-mobile-inputrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Toggle for the special-keys panel; mirrors the send button's footprint. */
+.th-mobile-keys-toggle {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  background: var(--th-surface);
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-keys-toggle--on {
+  background: var(--th-active);
+  color: var(--th-text);
+  border-color: var(--th-border-strong);
+}
+
+.th-mobile-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  padding: 9px 12px;
+  background: var(--th-surface);
+  color: var(--th-text);
+  font-family: var(--th-font-mono);
+  font-size: 16px; /* ≥16px prevents iOS auto-zoom on focus */
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  caret-color: var(--th-accent);
+  transition: border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-input:focus {
+  border-color: var(--th-accent);
+}
+
+.th-mobile-input::placeholder {
+  color: var(--th-faint);
+}
+
+.th-mobile-send {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--th-radius);
+  background: var(--th-accent);
+  color: var(--th-accent-fg);
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-send:hover {
+  background: var(--th-accent-hover);
+}
+
+.th-mobile-send:active {
+  transform: scale(0.92);
+}
+

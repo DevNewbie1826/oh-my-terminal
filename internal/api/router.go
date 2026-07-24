@@ -67,6 +67,8 @@ func (s *Server) Handler() http.Handler {
 	protected.HandleFunc("GET /api/layout", s.handleGetLayout)
 	protected.HandleFunc("PUT /api/layout", s.handleSetLayout)
 
+	protected.HandleFunc("GET /api/system/stats", s.handleSystemStats)
+
 	mux.Handle("/api/", s.sessions.Middleware(protected))
 	mux.Handle("/", s.staticHandler())
 	return mux
@@ -83,6 +85,14 @@ func (s *Server) staticHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cleaned := path.Clean(strings.TrimPrefix(r.URL.Path, "/"))
 		if _, err := fs.Stat(sub, cleaned); err == nil {
+			// Content-hashed assets are immutable; everything else (favicon,
+			// fonts) gets a short cache. index.html is handled by the SPA
+			// fallback below with no-cache so a rebuild is always picked up.
+			if strings.HasPrefix(cleaned, "assets/") {
+				w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				w.Header().Set("Cache-Control", "no-cache")
+			}
 			fileServer.ServeHTTP(w, r)
 			return
 		}
@@ -92,6 +102,7 @@ func (s *Server) staticHandler() http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write(index)
 	})
 }

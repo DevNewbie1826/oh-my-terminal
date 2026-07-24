@@ -5,13 +5,18 @@ import ko from "./locales/ko.json";
 
 export type Lang = "en" | "ko";
 
+/** Translate a key; `{name}` placeholders are filled from vars. */
+export type Translate = (key: string, vars?: Readonly<Record<string, string | number>>) => string;
+
 export interface I18nValue {
   readonly lang: Lang;
   readonly setLang: (lang: Lang) => void;
   readonly font: FontId;
   readonly setFont: (font: FontId) => void;
+  readonly fontSize: number;
+  readonly setFontSize: (size: number) => void;
   /** Translate a key; `{name}` placeholders are filled from vars. */
-  readonly t: (key: string, vars?: Readonly<Record<string, string | number>>) => string;
+  readonly t: Translate;
 }
 
 const tables: Readonly<Record<Lang, Readonly<Record<string, string>>>> = { en, ko };
@@ -21,6 +26,8 @@ export const I18nContext = createContext<I18nValue>({
   setLang: () => undefined,
   font: "system",
   setFont: () => undefined,
+  fontSize: 13,
+  setFontSize: () => undefined,
   t: (key) => key,
 });
 

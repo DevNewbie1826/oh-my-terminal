@@ -26,7 +26,6 @@
   overflow: hidden;
 }
 
-/* ---- nav (top) ---- */
 .th-sidebar-nav {
   flex: none;
   display: flex;
@@ -74,7 +73,6 @@
   gap: 2px;
 }
 
-/* ---- body (scrollable tree) ---- */
 .th-sidebar-body {
   flex: 1;
   min-height: 0;
@@ -112,7 +110,6 @@
   line-height: 1.5;
 }
 
-/* ---- footer ---- */
 .th-sidebar-footer {
   flex: none;
   display: flex;
@@ -122,43 +119,166 @@
   border-top: 1px solid var(--th-border);
 }
 
-.th-sidebar-lang {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border: 1px solid var(--th-border);
-  border-radius: var(--th-radius-sm);
-  color: var(--th-muted);
-  font-size: 12px;
-  background: transparent;
-  cursor: pointer;
-  transition: color var(--th-dur-fast) var(--th-ease),
-    border-color var(--th-dur-fast) var(--th-ease),
-    background var(--th-dur-fast) var(--th-ease);
+.th-settings-menu {
+  position: relative;
 }
 
-.th-sidebar-lang:hover {
+.th-settings-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  width: 240px;
+  padding: 10px;
+  background: var(--th-surface-raised);
+  border: 1px solid var(--th-border-strong);
+  border-radius: var(--th-radius);
+  box-shadow: var(--th-shadow);
+  animation: th-settings-in var(--th-dur-fast) var(--th-ease);
+}
+
+@keyframes th-settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.th-settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.th-settings-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+}
+
+.th-settings-seg {
+  display: flex;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  overflow: hidden;
+}
+
+.th-settings-seg-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--th-muted);
+  background: transparent;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-settings-seg-btn + .th-settings-seg-btn {
+  border-left: 1px solid var(--th-border);
+}
+
+.th-settings-seg-btn:hover {
+  background: var(--th-hover);
   color: var(--th-text);
+}
+
+.th-settings-seg-btn--on {
+  background: var(--th-accent);
+  color: var(--th-accent-fg);
+}
+
+.th-settings-seg-btn--on:hover {
+  background: var(--th-accent-hover);
+  color: var(--th-accent-fg);
+}
+
+.th-settings-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-surface);
+  color: var(--th-text);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.th-settings-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.th-settings-size-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-text-dim);
+  font-size: 15px;
+  line-height: 1;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-settings-size-btn:hover:not(:disabled) {
   background: var(--th-hover);
   border-color: var(--th-border-strong);
 }
 
-.th-sidebar-lang select {
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: 12px;
-  font-weight: 600;
+.th-settings-size-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.th-settings-size-value {
+  flex: 1;
+  text-align: center;
+  font-family: var(--th-font-mono);
+  font-size: 12.5px;
   color: var(--th-text);
-  cursor: pointer;
+}
+
+.th-settings-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--th-border);
+}
+
+.th-settings-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: var(--th-radius-sm);
+  color: var(--th-text-dim);
+  font-size: 12.5px;
+  text-align: left;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-settings-item:hover {
+  background: var(--th-hover);
+  color: var(--th-text);
 }
 
 .th-sidebar-footer-spacer {
   flex: 1;
 }
 
-/* ---- buttons ---- */
 .th-btn-icon {
   display: inline-flex;
   align-items: center;
@@ -213,7 +333,6 @@
   background: var(--th-hover);
 }
 
-/* ---- collapse toggle (edge-mounted) ---- */
 .th-sidebar-toggle {
   position: absolute;
   top: 8px;
@@ -264,7 +383,6 @@
   visibility: hidden;
 }
 
-/* ---- session tree ---- */
 .th-tree {
   display: flex;
   flex-direction: column;
@@ -390,7 +508,6 @@
   display: none;
 }
 
-/* inline rename input */
 .th-tree-rename {
   flex: 1;
   min-width: 0;
@@ -408,7 +525,6 @@
   border-color: var(--th-accent);
 }
 
-/* ---- mobile drawer ---- */
 .th-backdrop {
   display: none;
 }
@@ -425,6 +541,7 @@
     /* fixed positioning anchors to the layout viewport, which on iOS extends
        behind the URL bar / keyboard — size to the visual viewport instead so
        the footer stays visible. */
+    height: 100vh;
     height: calc(var(--th-vh-unit, 1vh) * 100);
     width: var(--th-sidebar-w);
     transform: translateX(0);
@@ -450,6 +567,7 @@
     position: fixed;
     top: 0;
     left: 0;
+    height: 100vh;
     height: calc(var(--th-vh-unit, 1vh) * 100);
     width: 100%;
     background: var(--th-backdrop);
@@ -468,5 +586,11 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .th-sidebar-logo-dot {
+    animation: none;
   }
 }

@@ -17,7 +17,7 @@ export interface SessionRef {
 
 export interface SplitActions {
   readonly onFocusPane: (paneId: string) => void;
-  readonly onAssign: (paneId: string, wsId: string, tmId: string) => void;
+  readonly onAssign: (paneId: string, tmId: string) => void;
   readonly onCreateTerminal: (paneId: string, wsId: string) => void;
   readonly onSplit: (paneId: string, dir: SplitDir) => void;
   readonly onClosePane: (paneId: string) => void;
@@ -64,7 +64,7 @@ function LeafView({ node, ...rest }: SplitViewProps & { readonly node: LeafData 
         <SessionPicker
           workspaces={workspaces}
           placed={placed}
-          onAssign={(wsId, tmId) => actions.onAssign(node.id, wsId, tmId)}
+          onAssign={(tmId) => actions.onAssign(node.id, tmId)}
           onCreateTerminal={(wsId) => actions.onCreateTerminal(node.id, wsId)}
         />
       )}
