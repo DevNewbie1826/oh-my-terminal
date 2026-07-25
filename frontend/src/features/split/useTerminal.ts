@@ -301,6 +301,24 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
       conn.send({ type: "input", data });
     });
 
+    term.attachCustomKeyEventHandler((event) => {
+      // xterm's default handler drops the Shift modifier for Enter (sends CR
+      // for both), so send the kitty sequence explicitly; tmux 3.4+ forwards
+      // CSI u and TUIs interpret it as newline-insert.
+      if (
+        event.type === "keydown" &&
+        event.key === "Enter" &&
+        event.shiftKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.metaKey
+      ) {
+        conn.send({ type: "input", data: "\x1b[13;2u" });
+        return false;
+      }
+      return true;
+    });
+
     const ro = new ResizeObserver(() => {
       doFit();
     });
