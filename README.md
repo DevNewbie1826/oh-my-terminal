@@ -58,6 +58,18 @@ make build
 
 브라우저에서 `http://localhost:8080` 접속 → 비밀번호 입력.
 
+### 백그라운드 실행 (데몬)
+
+`--daemon`으로 백그라운드에서 시작하고, `--status`로 상태를 확인하거나 `--stop`으로 중지합니다. `--stop`과 `--status`에는 비밀번호가 필요하지 않습니다.
+
+```bash
+./bin/oh-my-terminal --password <비밀번호> --daemon
+./bin/oh-my-terminal --status
+./bin/oh-my-terminal --stop
+```
+
+PID는 `~/.terminal-hub/oh-my-terminal.pid`, 로그는 `~/.terminal-hub/oh-my-terminal.log`에 저장됩니다. 데몬 모드는 부팅 시 자동으로 시작되지 않습니다.
+
 ### 데이터
 
 - 워크스페이스/터미널/레이아웃: `~/.terminal-hub/state.json`에 영속화
@@ -116,6 +128,18 @@ Builds the frontend and produces a single Go binary (`bin/oh-my-terminal`).
 | `--root` | `$HOME` | File browser root restriction. Also via `TH_ROOT` |
 
 Open `http://localhost:8080` in your browser and enter the password.
+
+### Background (daemon)
+
+Start in the background with `--daemon`, check its state with `--status`, or stop it with `--stop`. `--stop` and `--status` do not require the password.
+
+```bash
+./bin/oh-my-terminal --password <secret> --daemon
+./bin/oh-my-terminal --status
+./bin/oh-my-terminal --stop
+```
+
+The PID is stored in `~/.terminal-hub/oh-my-terminal.pid` and logs in `~/.terminal-hub/oh-my-terminal.log`. Daemon mode does not start automatically at boot.
 
 ### Data
 

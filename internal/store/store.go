@@ -53,6 +53,19 @@ type Store struct {
 	data   state
 }
 
+// StateDir returns the directory used for persistent application state.
+func StateDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("resolving home directory: %w", err)
+	}
+	dir := filepath.Join(home, ".terminal-hub")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return "", fmt.Errorf("creating state directory: %w", err)
+	}
+	return dir, nil
+}
+
 func newID(prefix string) (string, error) {
 	raw := make([]byte, 4)
 	if _, err := rand.Read(raw); err != nil {
@@ -64,13 +77,9 @@ func newID(prefix string) (string, error) {
 // Load reads state.json (if present), prunes terminals whose tmux sessions are
 // dead, and returns a ready Store.
 func Load(ctx context.Context, logger *slog.Logger) (*Store, error) {
-	home, err := os.UserHomeDir()
+	dir, err := StateDir()
 	if err != nil {
-		return nil, fmt.Errorf("resolving home directory: %w", err)
-	}
-	dir := filepath.Join(home, ".terminal-hub")
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return nil, fmt.Errorf("creating state directory: %w", err)
+		return nil, err
 	}
 	s := &Store{path: filepath.Join(dir, "state.json"), logger: logger}
 
