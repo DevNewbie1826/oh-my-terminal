@@ -27,7 +27,9 @@ A single-binary web app for managing tmux-based terminals from your browser.
 curl -fsSL https://raw.githubusercontent.com/DevNewbie1826/oh-my-terminal/main/install.sh | sh
 ```
 
-특정 버전이나 설치 경로는 `VERSION=v0.1.0`, `INSTALL_DIR=~/.local/bin` 환경변수로 지정할 수 있습니다. 런타임에 [tmux](https://github.com/tmux/tmux)가 필요합니다.
+특정 버전이나 설치 경로는 `VERSION=v0.2.0`, `INSTALL_DIR=~/.local/bin` 환경변수로 지정할 수 있습니다. 런타임에 [tmux](https://github.com/tmux/tmux)가 필요합니다.
+
+업그레이드는 같은 명령을 다시 실행하면 됩니다 — 항상 최신 릴리즈를 낮받아 덮어씁니다.
 
 ### 요구 사항 (소스 빌드)
 
@@ -98,7 +100,9 @@ Downloads the latest binary from [GitHub Releases](https://github.com/DevNewbie1
 curl -fsSL https://raw.githubusercontent.com/DevNewbie1826/oh-my-terminal/main/install.sh | sh
 ```
 
-Set `VERSION=v0.1.0` or `INSTALL_DIR=~/.local/bin` to override the defaults. [tmux](https://github.com/tmux/tmux) is required at runtime.
+Set `VERSION=v0.2.0` or `INSTALL_DIR=~/.local/bin` to override the defaults. [tmux](https://github.com/tmux/tmux) is required at runtime.
+
+To upgrade, run the same command again — it always downloads the latest release and overwrites the previous binary.
 
 ### Requirements (build from source)
 
