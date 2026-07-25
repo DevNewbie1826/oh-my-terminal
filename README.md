@@ -19,7 +19,17 @@ A single-binary web app for managing tmux-based terminals from your browser.
 - **모바일 대응** — iOS Safari WebSocket 안정화 (하트비트 + 자동 재연결)
 - **레이아웃 영속화** — 분할 레이아웃이 서버에 저장되어 재접속 시 복원
 
-### 요구 사항
+### 설치
+
+[GitHub Releases](https://github.com/DevNewbie1826/oh-my-terminal/releases)에서 최신 바이너리를 받아 설치합니다 (macOS / Linux, amd64 / arm64):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevNewbie1826/oh-my-terminal/main/install.sh | sh
+```
+
+특정 버전이나 설치 경로는 `VERSION=v0.1.0`, `INSTALL_DIR=~/.local/bin` 환경변수로 지정할 수 있습니다. 런타임에 [tmux](https://github.com/tmux/tmux)가 필요합니다.
+
+### 요구 사항 (소스 빌드)
 
 - [Go](https://go.dev/) 1.26+
 - [Node.js](https://nodejs.org/) 18+ (프론트엔드 빌드용)
@@ -68,7 +78,17 @@ make build
 - **Mobile support** — iOS Safari WebSocket stability (heartbeat + auto-reconnect)
 - **Layout persistence** — split layout saved server-side, restored on reconnect
 
-### Requirements
+### Install
+
+Downloads the latest binary from [GitHub Releases](https://github.com/DevNewbie1826/oh-my-terminal/releases) (macOS / Linux, amd64 / arm64):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevNewbie1826/oh-my-terminal/main/install.sh | sh
+```
+
+Set `VERSION=v0.1.0` or `INSTALL_DIR=~/.local/bin` to override the defaults. [tmux](https://github.com/tmux/tmux) is required at runtime.
+
+### Requirements (build from source)
 
 - [Go](https://go.dev/) 1.26+
 - [Node.js](https://nodejs.org/) 18+ (frontend build)
