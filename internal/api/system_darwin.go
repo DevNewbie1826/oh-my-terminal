@@ -105,7 +105,7 @@ func darwinUsedMemory() uint64 {
 	if err != nil {
 		return 0
 	}
-	var pageSize uint64 = defaultPageSize
+	pageSize := defaultPageSize
 	var active, wired, compressor uint64
 	sc := bufio.NewScanner(strings.NewReader(string(out)))
 	for sc.Scan() {

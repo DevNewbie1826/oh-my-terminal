@@ -116,7 +116,7 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 		s.writeFsError(w, err)
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": filepath.Base(target)}))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeContent(w, r, filepath.Base(target), info.ModTime(), f)
@@ -144,7 +144,7 @@ func (s *Server) handleReadFile(w http.ResponseWriter, r *http.Request) {
 		s.writeFsError(w, err)
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	// Read at most maxReadBytes+1 so a file that grows between the size check
 	// and the read can never cause an unbounded allocation.
 	data, err := io.ReadAll(io.LimitReader(f, maxReadBytes+1))
@@ -280,7 +280,7 @@ func saveUpload(fh *multipart.FileHeader, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 	name := filepath.Base(filepath.Clean(fh.Filename))
 	if name == "" || name == "." || name == ".." {
 		return errors.New("invalid filename")
@@ -289,7 +289,7 @@ func saveUpload(fh *multipart.FileHeader, destDir string) error {
 	if err != nil {
 		return err
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 	_, err = io.Copy(dst, src)
 	return err
 }

@@ -138,7 +138,7 @@ func validUTF8Prefix(b []byte) int {
 // OnMessage routes client frames: ping → pong, input → PTY stdin,
 // resize → pty.Setsize.
 func (s *Server) OnMessage(socket *gws.Conn, message *gws.Message) {
-	defer message.Close()
+	defer func() { _ = message.Close() }()
 	var msg wsIncoming
 	if err := json.Unmarshal(message.Bytes(), &msg); err != nil {
 		return
