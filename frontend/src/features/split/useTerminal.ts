@@ -313,6 +313,9 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
         !event.altKey &&
         !event.metaKey
       ) {
+        // This beta's _keyDown early-returns on `false` without cancelling the
+        // DOM event, so preventDefault ourselves or keypress still emits CR.
+        event.preventDefault();
         conn.send({ type: "input", data: "\x1b[13;2u" });
         return false;
       }
