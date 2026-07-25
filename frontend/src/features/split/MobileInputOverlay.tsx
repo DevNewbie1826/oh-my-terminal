@@ -131,12 +131,13 @@ export function MobileInputOverlay({
               key={key.label}
               type="button"
               className={`th-mobile-key${key.label.startsWith("^") ? " th-mobile-key--ctrl" : ""}`}
-              onPointerDown={(ev) => {
-                // preventDefault keeps focus on the textarea so the software
-                // keyboard stays up; the actual send happens on click.
-                ev.preventDefault();
+              onClick={() => {
+                send(key.seq);
+                // Re-focus the textarea so the software keyboard stays up.
+                // (Do NOT preventDefault on pointerdown: on iOS Safari that
+                // cancels the follow-up click and the key would never fire.)
+                inputRef.current?.focus();
               }}
-              onClick={() => send(key.seq)}
             >
               {key.label}
             </button>
