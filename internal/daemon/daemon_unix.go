@@ -83,7 +83,8 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 
 	if err := waitForReady(readyReader); err != nil {
 		killAndWait(cmd.Process)
-		_ = lockFile.Close()
+		// The deferred lockFile close keeps the lock held through this cleanup,
+		// so no successor can interleave its pid file write.
 		if removeErr := removePIDFileIfOwned(pidPath, cmd.Process.Pid); removeErr != nil {
 			return 0, "", removeErr
 		}
@@ -93,6 +94,10 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 }
 
 func stop() (int, error) {
+	// Residual: if the daemon dies and a new start wins the lock within one
+	// poll interval, the SIGKILL fallback below can target a recycled PID.
+	// Eliminating this needs a separate lifecycle-operation lock; accepted for
+	// a single-user local daemon (see .omo/ulw-loop/evidence/code-review-round3.md R3-2).
 	pidPath, _, lockPath, err := daemonPaths()
 	if err != nil {
 		return 0, err
@@ -175,6 +180,9 @@ func prepareChild() (*Child, error) {
 }
 
 func validChildDescriptors(lockFile, readyWriter *os.File) bool {
+	// Type checks only; a caller who forges TH_DAEMON_CHILD plus its own fds
+	// could serve without the lock, which grants nothing beyond foreground
+	// serving (accepted residual, code-review-round3.md R3-1).
 	lockInfo, lockErr := lockFile.Stat()
 	readyInfo, readyErr := readyWriter.Stat()
 	return lockErr == nil && readyErr == nil && lockInfo.Mode().IsRegular() && readyInfo.Mode()&os.ModeNamedPipe != 0
