@@ -7,9 +7,6 @@ import (
 	"testing"
 )
 
-// TestDaemonChildArgs pins the args rewrite performed when re-execing the
-// server as a daemon child: the user-facing --daemon flag is translated to
-// the internal --daemon-child flag while all other args are preserved.
 func TestDaemonChildArgs(t *testing.T) {
 	tests := []struct {
 		name string

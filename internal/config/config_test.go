@@ -7,12 +7,8 @@ import (
 	"testing"
 )
 
-// TestLoad pins the current Load behavior for flag combinations, password
-// requirements, and the daemon/stop/status mutual-exclusion rules.
 func TestLoad(t *testing.T) {
-	// Neutralize machine-specific env influence for every subtest. envOr and
-	// envPort treat an empty value as unset, so setting "" is equivalent to
-	// clearing the variable. t.Setenv on the parent applies to all subtests.
+	// Clear config environment variables for deterministic subtests.
 	for _, key := range []string{"TH_PASSWORD", "TH_PORT", "TH_HOST", "TH_ROOT"} {
 		t.Setenv(key, "")
 	}
@@ -22,7 +18,7 @@ func TestLoad(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    []string
-		wantErr string // if non-empty, expected substring of the returned error
+		wantErr string
 		check   func(t *testing.T, cfg *Config)
 	}{
 		{

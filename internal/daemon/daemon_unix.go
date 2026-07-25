@@ -34,12 +34,12 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 	if err != nil {
 		return 0, "", fmt.Errorf("opening daemon log file: %w", err)
 	}
-	defer logFile.Close()
+	defer func() { _ = logFile.Close() }()
 	stdin, err := os.Open(os.DevNull)
 	if err != nil {
 		return 0, "", fmt.Errorf("opening %s: %w", os.DevNull, err)
 	}
-	defer stdin.Close()
+	defer func() { _ = stdin.Close() }()
 
 	executable, err := os.Executable()
 	if err != nil {
@@ -155,7 +155,7 @@ func waitForReady(process *os.Process, addr string) error {
 	for {
 		conn, err := net.DialTimeout("tcp", addr, pollInterval)
 		if err == nil {
-			conn.Close()
+			_ = conn.Close()
 			return nil
 		}
 		if !processAlive(process.Pid) {

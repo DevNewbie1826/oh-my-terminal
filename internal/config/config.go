@@ -97,17 +97,19 @@ func Load(ctx context.Context, args []string) (*Config, error) {
 	if serving && *password == "" {
 		return nil, errors.New("--password is required (or set TH_PASSWORD)")
 	}
+
+	cfg := &Config{
+		Host:        *host,
+		Port:        *port,
+		Password:    *password,
+		Root:        *root,
+		Daemon:      *daemon,
+		Stop:        *stop,
+		Status:      *status,
+		DaemonChild: daemonChild,
+	}
 	if !serving {
-		return &Config{
-			Host:        *host,
-			Port:        *port,
-			Password:    *password,
-			Root:        *root,
-			Daemon:      *daemon,
-			Stop:        *stop,
-			Status:      *status,
-			DaemonChild: daemonChild,
-		}, nil
+		return cfg, nil
 	}
 	absRoot, err := filepath.Abs(filepath.Clean(*root))
 	if err != nil {
@@ -120,15 +122,6 @@ func Load(ctx context.Context, args []string) (*Config, error) {
 	if !info.IsDir() {
 		return nil, fmt.Errorf("root %s is not a directory", absRoot)
 	}
-
-	return &Config{
-		Host:        *host,
-		Port:        *port,
-		Password:    *password,
-		Root:        absRoot,
-		Daemon:      *daemon,
-		Stop:        *stop,
-		Status:      *status,
-		DaemonChild: daemonChild,
-	}, nil
+	cfg.Root = absRoot
+	return cfg, nil
 }
