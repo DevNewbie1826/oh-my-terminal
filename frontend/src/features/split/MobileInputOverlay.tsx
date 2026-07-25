@@ -79,8 +79,9 @@ const EXTRA_KEYS: readonly ExtraKey[] = [
  *  So this component is deliberately dumb: type, then press send.
  *
  * The collapsible key panel above the bar covers keys mobile keyboards
- *  lack (ESC, arrows, Ctrl-combos, tmux prefix). Keys send on touch-down
- *  for immediacy and never touch the textarea, so Korean composition in
+ *  lack (ESC, arrows, Ctrl-combos, tmux prefix). Keys send on click (tap) so
+ *  the browser's tap-vs-scroll discrimination keeps a horizontal swipe from
+ *  firing a key, and they never touch the textarea, so Korean composition in
  *  progress is not disturbed.
  */
 export function MobileInputOverlay({
@@ -131,11 +132,11 @@ export function MobileInputOverlay({
               type="button"
               className={`th-mobile-key${key.label.startsWith("^") ? " th-mobile-key--ctrl" : ""}`}
               onPointerDown={(ev) => {
-                // Send on touch-down for immediacy; preventDefault keeps the
-                // software keyboard from dismissing on the tap.
+                // preventDefault keeps focus on the textarea so the software
+                // keyboard stays up; the actual send happens on click.
                 ev.preventDefault();
-                send(key.seq);
               }}
+              onClick={() => send(key.seq)}
             >
               {key.label}
             </button>
