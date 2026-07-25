@@ -33,7 +33,10 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 		_ = lockFile.Close()
 		if isLockHeld(err) {
 			pid, _ := readPIDFile(pidPath)
-			return 0, "", fmt.Errorf("already running (pid %d)", pid)
+			if pid > 0 {
+				return 0, "", fmt.Errorf("already running (pid %d)", pid)
+			}
+			return 0, "", errors.New("already running (starting up)")
 		}
 		return 0, "", fmt.Errorf("locking daemon state: %w", err)
 	}
