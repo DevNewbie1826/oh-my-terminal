@@ -1,0 +1,124 @@
+package config
+
+import (
+	"context"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// TestLoad pins the current Load behavior for flag combinations, password
+// requirements, and the daemon/stop/status mutual-exclusion rules.
+func TestLoad(t *testing.T) {
+	// Neutralize machine-specific env influence for every subtest. envOr and
+	// envPort treat an empty value as unset, so setting "" is equivalent to
+	// clearing the variable. t.Setenv on the parent applies to all subtests.
+	for _, key := range []string{"TH_PASSWORD", "TH_PORT", "TH_HOST", "TH_ROOT"} {
+		t.Setenv(key, "")
+	}
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string // if non-empty, expected substring of the returned error
+		check   func(t *testing.T, cfg *Config)
+	}{
+		{
+			name: "stop succeeds without password",
+			args: []string{"--stop"},
+			check: func(t *testing.T, cfg *Config) {
+				if !cfg.Stop {
+					t.Errorf("Config.Stop = false, want true")
+				}
+				if cfg.Status {
+					t.Errorf("Config.Status = true, want false")
+				}
+				if cfg.Daemon {
+					t.Errorf("Config.Daemon = true, want false")
+				}
+			},
+		},
+		{
+			name: "status succeeds without password",
+			args: []string{"--status"},
+			check: func(t *testing.T, cfg *Config) {
+				if !cfg.Status {
+					t.Errorf("Config.Status = false, want true")
+				}
+				if cfg.Stop {
+					t.Errorf("Config.Stop = true, want false")
+				}
+			},
+		},
+		{
+			name:    "no args without password fails",
+			args:    []string{},
+			wantErr: "--password is required",
+		},
+		{
+			name:    "daemon without password fails",
+			args:    []string{"--daemon"},
+			wantErr: "--password is required",
+		},
+		{
+			name:    "daemon and stop cannot combine",
+			args:    []string{"--daemon", "--stop"},
+			wantErr: "cannot be combined",
+		},
+		{
+			name:    "stop and status cannot combine",
+			args:    []string{"--stop", "--status"},
+			wantErr: "cannot be combined",
+		},
+		{
+			name: "daemon-child with password succeeds",
+			args: []string{"--daemon-child", "--password", "x"},
+			check: func(t *testing.T, cfg *Config) {
+				if !cfg.DaemonChild {
+					t.Errorf("Config.DaemonChild = false, want true")
+				}
+				if cfg.Password != "x" {
+					t.Errorf("Config.Password = %q, want %q", cfg.Password, "x")
+				}
+			},
+		},
+		{
+			name: "password and port succeed with absolute root",
+			args: []string{"--password", "x", "--port", "18231"},
+			check: func(t *testing.T, cfg *Config) {
+				if cfg.Port != 18231 {
+					t.Errorf("Config.Port = %d, want 18231", cfg.Port)
+				}
+				if !filepath.IsAbs(cfg.Root) {
+					t.Errorf("Config.Root = %q, want absolute path", cfg.Root)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg, err := Load(ctx, tt.args)
+			if tt.wantErr != "" {
+				if err == nil {
+					t.Fatalf("Load() error = nil, want error containing %q", tt.wantErr)
+				}
+				if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Fatalf("Load() error = %q, want error containing %q", err.Error(), tt.wantErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Load() unexpected error: %v", err)
+			}
+			if cfg == nil {
+				t.Fatal("Load() returned nil Config without error")
+			}
+			if tt.check != nil {
+				tt.check(t, cfg)
+			}
+		})
+	}
+}
