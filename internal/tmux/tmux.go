@@ -57,10 +57,7 @@ func EnableMouse(ctx context.Context) error {
 	return err
 }
 
-// EnableSetClipboard allows tmux to send clipboard writes to the outer terminal.
-// "on" lets both tmux-originated copies and in-pane apps' OSC 52 reach the
-// outer terminal; without it copy inside the web terminal can never reach the
-// browser clipboard.
+// EnableSetClipboard enables tmux clipboard integration.
 func EnableSetClipboard(ctx context.Context) error {
 	_, err := run(ctx, "set-option", "-g", "set-clipboard", "on")
 	return err
