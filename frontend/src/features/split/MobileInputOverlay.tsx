@@ -34,6 +34,7 @@ interface ExtraKey {
 const EXTRA_KEYS: readonly ExtraKey[] = [
   { label: "ESC", seq: "\x1b" },
   { label: "TAB", seq: "\t" },
+  { label: "⌫", seq: "\x7f" },
   { label: "↑", seq: "\x1b[A" },
   { label: "↓", seq: "\x1b[B" },
   { label: "→", seq: "\x1b[C" },
