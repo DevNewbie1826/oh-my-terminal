@@ -311,7 +311,9 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
         event.shiftKey &&
         !event.ctrlKey &&
         !event.altKey &&
-        !event.metaKey
+        !event.metaKey &&
+        !event.isComposing &&
+        !composingRef.current
       ) {
         // This beta's _keyDown early-returns on `false` without cancelling the
         // DOM event, so preventDefault ourselves or keypress still emits CR.
