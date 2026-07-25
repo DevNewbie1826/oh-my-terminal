@@ -4,7 +4,7 @@ project_name: oh-my-terminal
 
 before:
   hooks:
-    - cd frontend && npm ci && npm run build
+    - sh -c "cd frontend && npm ci && npm run build"
 
 builds:
   - id: oh-my-terminal
