@@ -9,17 +9,18 @@ import (
 
 func TestLoad(t *testing.T) {
 	// Clear config environment variables for deterministic subtests.
-	for _, key := range []string{"TH_PASSWORD", "TH_PORT", "TH_HOST", "TH_ROOT"} {
+	for _, key := range []string{"TH_PASSWORD", "TH_PORT", "TH_HOST", "TH_ROOT", "TH_DAEMON_CHILD"} {
 		t.Setenv(key, "")
 	}
 
 	ctx := context.Background()
 
 	tests := []struct {
-		name    string
-		args    []string
-		wantErr string
-		check   func(t *testing.T, cfg *Config)
+		name        string
+		args        []string
+		wantErr     string
+		daemonChild bool
+		check       func(t *testing.T, cfg *Config)
 	}{
 		{
 			name: "stop succeeds without password",
@@ -69,8 +70,9 @@ func TestLoad(t *testing.T) {
 			wantErr: "cannot be combined",
 		},
 		{
-			name: "daemon-child with password succeeds",
-			args: []string{"--daemon-child", "--password", "x"},
+			name:        "daemon child environment with password succeeds",
+			args:        []string{"--password", "x"},
+			daemonChild: true,
 			check: func(t *testing.T, cfg *Config) {
 				if !cfg.DaemonChild {
 					t.Errorf("Config.DaemonChild = false, want true")
@@ -96,6 +98,10 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("TH_DAEMON_CHILD", "")
+			if tt.daemonChild {
+				t.Setenv("TH_DAEMON_CHILD", "1")
+			}
 			cfg, err := Load(ctx, tt.args)
 			if tt.wantErr != "" {
 				if err == nil {

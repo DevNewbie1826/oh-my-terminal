@@ -68,7 +68,7 @@ make build
 ./bin/oh-my-terminal --stop
 ```
 
-PID는 `~/.terminal-hub/oh-my-terminal.pid`, 로그는 `~/.terminal-hub/oh-my-terminal.log`에 저장됩니다. 데몬 모드는 부팅 시 자동으로 시작되지 않습니다.
+PID는 `~/.terminal-hub/oh-my-terminal.pid`, 로그는 `~/.terminal-hub/oh-my-terminal.log`, 잠금 파일은 `~/.terminal-hub/oh-my-terminal.lock`에 저장됩니다. 데몬 모드는 부팅 시 자동으로 시작되지 않습니다.
 
 ### 데이터
 
@@ -139,7 +139,7 @@ Start in the background with `--daemon`, check its state with `--status`, or sto
 ./bin/oh-my-terminal --stop
 ```
 
-The PID is stored in `~/.terminal-hub/oh-my-terminal.pid` and logs in `~/.terminal-hub/oh-my-terminal.log`. Daemon mode does not start automatically at boot.
+The PID is stored in `~/.terminal-hub/oh-my-terminal.pid`, logs in `~/.terminal-hub/oh-my-terminal.log`, and the lock file in `~/.terminal-hub/oh-my-terminal.lock`. Daemon mode does not start automatically at boot.
 
 ### Data
 

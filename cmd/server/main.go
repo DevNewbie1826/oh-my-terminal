@@ -38,7 +38,30 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		if pid == 0 {
+			fmt.Println("oh-my-terminal is running (pid unknown)")
+			return
+		}
 		fmt.Printf("oh-my-terminal is running (pid %d)\n", pid)
+		return
+	}
+	if cfg.DaemonChild {
+		child, err := daemon.PrepareChild()
+		if err != nil {
+			logger.Error("preparing daemon child", "err", err)
+			os.Exit(1)
+		}
+		runErr := api.Run(ctx, cfg, logger, child.Ready)
+		if err := daemon.RemoveChildPIDFile(); err != nil {
+			logger.Warn("removing daemon pid file", "err", err)
+		}
+		if err := child.Close(); err != nil {
+			logger.Warn("closing daemon lock file", "err", err)
+		}
+		if runErr != nil {
+			logger.Error("server exited with error", "err", runErr)
+			os.Exit(1)
+		}
 		return
 	}
 	if cfg.Daemon {
@@ -50,14 +73,7 @@ func main() {
 		fmt.Printf("oh-my-terminal started (pid %d, http://%s)\n", pid, addr)
 		return
 	}
-	if cfg.DaemonChild {
-		defer func() {
-			if err := daemon.RemoveChildPIDFile(); err != nil {
-				logger.Warn("removing daemon pid file", "err", err)
-			}
-		}()
-	}
-	if err := api.Run(ctx, cfg, logger); err != nil {
+	if err := api.Run(ctx, cfg, logger, nil); err != nil {
 		logger.Error("server exited with error", "err", err)
 		os.Exit(1)
 	}

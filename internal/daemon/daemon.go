@@ -3,9 +3,16 @@ package daemon
 
 import (
 	"errors"
+	"os"
 
 	"github.com/oh-my-terminal/oh-my-terminal/internal/config"
 )
+
+// Child holds the lock file owned by a daemon child process.
+type Child struct {
+	lockFile *os.File
+	pidPath  string
+}
 
 var (
 	// ErrNotRunning reports that no live daemon process owns the PID file.
@@ -27,4 +34,19 @@ func Stop() (int, error) {
 // Status returns the live daemon process ID.
 func Status() (int, error) {
 	return status()
+}
+
+// PrepareChild opens the lock file before the server reports readiness.
+func PrepareChild() (*Child, error) {
+	return prepareChild()
+}
+
+// Ready reports a bound listener to the parent and takes daemon ownership.
+func (c *Child) Ready() {
+	childReady(c)
+}
+
+// Close releases the child lock file.
+func (c *Child) Close() error {
+	return closeChild(c)
 }

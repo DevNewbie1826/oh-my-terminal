@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 // Config holds all runtime settings for the server.
@@ -40,30 +39,6 @@ func envPort(fallback int) int {
 	return fallback
 }
 
-// extractDaemonChild handles the internal flag before flag parsing so it is
-// accepted for self re-exec without exposing it in normal flag help.
-func extractDaemonChild(args []string) (bool, []string, error) {
-	parsed := make([]string, 0, len(args))
-	child := false
-	for _, arg := range args {
-		if arg == "--daemon-child" {
-			child = true
-			continue
-		}
-		value, found := strings.CutPrefix(arg, "--daemon-child=")
-		if !found {
-			parsed = append(parsed, arg)
-			continue
-		}
-		parsedValue, err := strconv.ParseBool(value)
-		if err != nil {
-			return false, nil, fmt.Errorf("parsing --daemon-child: %w", err)
-		}
-		child = parsedValue
-	}
-	return child, parsed, nil
-}
-
 // Load parses CLI flags (with environment fallbacks) and validates the result.
 func Load(ctx context.Context, args []string) (*Config, error) {
 	home, err := os.UserHomeDir()
@@ -79,18 +54,15 @@ func Load(ctx context.Context, args []string) (*Config, error) {
 	daemon := fs.Bool("daemon", false, "run in the background")
 	stop := fs.Bool("stop", false, "stop the background server")
 	status := fs.Bool("status", false, "show background server status")
-	daemonChild, parseArgs, err := extractDaemonChild(args)
-	if err != nil {
-		return nil, err
-	}
-	if err := fs.Parse(parseArgs); err != nil {
+	daemonChild := os.Getenv("TH_DAEMON_CHILD") == "1"
+	if err := fs.Parse(args); err != nil {
 		return nil, err
 	}
 	if (*daemon && (*stop || *status)) || (*stop && *status) {
 		return nil, errors.New("--daemon, --stop, and --status cannot be combined")
 	}
 	if daemonChild && (*stop || *status) {
-		return nil, errors.New("--daemon-child cannot be combined with --stop or --status")
+		return nil, errors.New("TH_DAEMON_CHILD cannot be combined with --stop or --status")
 	}
 
 	serving := !*stop && !*status

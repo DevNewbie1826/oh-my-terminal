@@ -12,16 +12,17 @@ import (
 )
 
 const (
-	pidFileName = "oh-my-terminal.pid"
-	logFileName = "oh-my-terminal.log"
+	pidFileName  = "oh-my-terminal.pid"
+	logFileName  = "oh-my-terminal.log"
+	lockFileName = "oh-my-terminal.lock"
 )
 
-func daemonPaths() (string, string, error) {
+func daemonPaths() (string, string, string, error) {
 	dir, err := store.StateDir()
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return filepath.Join(dir, pidFileName), filepath.Join(dir, logFileName), nil
+	return filepath.Join(dir, pidFileName), filepath.Join(dir, logFileName), filepath.Join(dir, lockFileName), nil
 }
 
 func readPIDFile(path string) (int, error) {
@@ -59,7 +60,7 @@ func removePIDFile(path string) error {
 // RemoveChildPIDFile removes this child process's PID file, if it still owns
 // it. A newer daemon PID file is left untouched.
 func RemoveChildPIDFile() error {
-	path, _, err := daemonPaths()
+	path, _, _, err := daemonPaths()
 	if err != nil {
 		return err
 	}

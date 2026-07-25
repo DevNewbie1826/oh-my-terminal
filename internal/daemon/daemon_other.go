@@ -17,3 +17,11 @@ func status() (int, error) {
 }
 
 func processAlive(_ int) bool { return false }
+
+func prepareChild() (*Child, error) {
+	return nil, ErrUnsupported
+}
+
+func childReady(_ *Child) {}
+
+func closeChild(_ *Child) error { return ErrUnsupported }
