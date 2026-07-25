@@ -188,6 +188,40 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
     const unicode11 = new Unicode11Addon();
     term.loadAddon(unicode11);
     term.unicode.activeVersion = "11";
+    const osc52Sub = term.parser.registerOscHandler(52, async (data) => {
+      try {
+        const separator = data.indexOf(";");
+        if (separator < 0) return true;
+        const payload = data.slice(separator + 1);
+        if (payload === "?") return true;
+        // atob returns Latin-1, so decode bytes as UTF-8 to preserve CJK text.
+        const encoded = atob(payload);
+        const bytes = Uint8Array.from(encoded, (char) => char.charCodeAt(0));
+        const text = new TextDecoder().decode(bytes);
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          // The Clipboard API is unavailable when a LAN page is served over HTTP.
+          const textarea = document.createElement("textarea");
+          textarea.style.position = "fixed";
+          textarea.style.left = "-9999px";
+          textarea.value = text;
+          document.body.append(textarea);
+          try {
+            textarea.focus();
+            textarea.select();
+            document.execCommand("copy");
+          } finally {
+            textarea.remove();
+          }
+        }
+      } catch (error) {
+        // Clipboard writes are best-effort; a failed write must never reject
+        // the parser callback or the terminal breaks on every tmux copy.
+        console.debug("osc52 clipboard write failed", error);
+      }
+      return true;
+    });
     term.open(el);
     // GPU renderer with a DOM fallback when WebGL is unavailable. The addon
     // instance is kept so it can be disposed explicitly on cleanup — xterm's
@@ -275,6 +309,7 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
     return () => {
       ro.disconnect();
       dataSub.dispose();
+      osc52Sub.dispose();
       if (textarea) {
         textarea.removeEventListener("compositionstart", onCompositionStart);
         textarea.removeEventListener("compositionend", settleComposition);

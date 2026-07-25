@@ -18,6 +18,7 @@ A single-binary web app for managing tmux-based terminals from your browser.
 - **다국어** — 한국어 / English
 - **모바일 대응** — iOS Safari WebSocket 안정화 (하트비트 + 자동 재연결)
 - **레이아웃 영속화** — 분할 레이아웃이 서버에 저장되어 재접속 시 복원
+- **텍스트 복사** — 드래그 선택한 터미널 텍스트를 복사 (tmux set-clipboard 필요, 서버에서 자동 활성화)
 
 ### 설치
 
@@ -91,6 +92,7 @@ PID는 `~/.terminal-hub/oh-my-terminal.pid`, 로그는 `~/.terminal-hub/oh-my-te
 - **i18n** — Korean / English
 - **Mobile support** — iOS Safari WebSocket stability (heartbeat + auto-reconnect)
 - **Layout persistence** — split layout saved server-side, restored on reconnect
+- **Text copy** — drag-select terminal text to copy it (requires tmux set-clipboard, enabled automatically by the server)
 
 ### Install
 

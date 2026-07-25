@@ -80,6 +80,9 @@ func (s *Server) OnOpen(socket *gws.Conn) {
 	if err := tmux.EnableMouse(context.Background()); err != nil {
 		s.logger.Warn("enabling tmux mouse mode", "err", err)
 	}
+	if err := tmux.EnableSetClipboard(context.Background()); err != nil {
+		s.logger.Warn("enabling tmux clipboard", "err", err)
+	}
 	cmd := exec.Command("tmux", "attach", "-t", name)
 	ptmx, err := pty.StartWithSize(cmd, &pty.Winsize{Rows: defaultRows, Cols: defaultCols})
 	if err != nil {
