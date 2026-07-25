@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"testing"
@@ -24,7 +25,10 @@ func TestRunSignalsReadyAndShutsDown(t *testing.T) {
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	go func() {
-		result <- Run(ctx, cfg, logger, func() { close(ready) })
+		result <- Run(ctx, cfg, logger, func() error {
+			close(ready)
+			return nil
+		})
 	}()
 
 	select {
@@ -40,5 +44,23 @@ func TestRunSignalsReadyAndShutsDown(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("Run() did not stop after context cancellation")
+	}
+}
+
+func TestRunReturnsReadyError(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cfg := &config.Config{
+		Host:     "127.0.0.1",
+		Port:     0,
+		Password: "x",
+		Root:     t.TempDir(),
+	}
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	want := errors.New("boom")
+	err := Run(ctx, cfg, logger, func() error { return want })
+	if !errors.Is(err, want) {
+		t.Fatalf("Run() error = %v, want wrapped %v", err, want)
 	}
 }

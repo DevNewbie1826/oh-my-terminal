@@ -10,8 +10,9 @@ import (
 
 // Child holds the lock file owned by a daemon child process.
 type Child struct {
-	lockFile *os.File
-	pidPath  string
+	lockFile    *os.File
+	readyWriter *os.File
+	pidPath     string
 }
 
 var (
@@ -21,7 +22,8 @@ var (
 	ErrUnsupported = errors.New("daemon mode is not supported on this platform")
 )
 
-// Start launches a detached child server and waits for it to accept requests.
+// Start launches a detached child server and waits until it has bound its
+// listener and taken ownership.
 func Start(cfg *config.Config, args []string) (int, string, error) {
 	return start(cfg, args)
 }
@@ -36,14 +38,14 @@ func Status() (int, error) {
 	return status()
 }
 
-// PrepareChild opens the lock file before the server reports readiness.
+// PrepareChild validates the inherited lock and readiness-pipe descriptors.
 func PrepareChild() (*Child, error) {
 	return prepareChild()
 }
 
-// Ready reports a bound listener to the parent and takes daemon ownership.
-func (c *Child) Ready() {
-	childReady(c)
+// Ready records daemon ownership and reports a bound listener to the parent.
+func (c *Child) Ready() error {
+	return childReady(c)
 }
 
 // Close releases the child lock file.

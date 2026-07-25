@@ -22,6 +22,6 @@ func prepareChild() (*Child, error) {
 	return nil, ErrUnsupported
 }
 
-func childReady(_ *Child) {}
+func childReady(_ *Child) error { return ErrUnsupported }
 
 func closeChild(_ *Child) error { return ErrUnsupported }

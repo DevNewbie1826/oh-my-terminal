@@ -57,13 +57,7 @@ func removePIDFile(path string) error {
 	return nil
 }
 
-// RemoveChildPIDFile removes this child process's PID file, if it still owns
-// it. A newer daemon PID file is left untouched.
-func RemoveChildPIDFile() error {
-	path, _, _, err := daemonPaths()
-	if err != nil {
-		return err
-	}
+func removePIDFileIfOwned(path string, expected int) error {
 	pid, err := readPIDFile(path)
 	if errors.Is(err, ErrNotRunning) {
 		return nil
@@ -71,8 +65,18 @@ func RemoveChildPIDFile() error {
 	if err != nil {
 		return err
 	}
-	if pid != os.Getpid() {
+	if pid != expected {
 		return nil
 	}
 	return removePIDFile(path)
+}
+
+// RemoveChildPIDFile removes this child process's PID file, if it still owns
+// it. A newer daemon PID file is left untouched.
+func RemoveChildPIDFile() error {
+	path, _, _, err := daemonPaths()
+	if err != nil {
+		return err
+	}
+	return removePIDFileIfOwned(path, os.Getpid())
 }

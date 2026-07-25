@@ -15,9 +15,11 @@ import (
 )
 
 const (
-	startTimeout = 3 * time.Second
-	stopTimeout  = 5 * time.Second
-	pollInterval = 50 * time.Millisecond
+	startTimeout     = 3 * time.Second
+	stopTimeout      = 5 * time.Second
+	killTimeout      = 2 * time.Second
+	childLockFD      = 3
+	childReadyPipeFD = 4
 )
 
 func start(cfg *config.Config, args []string) (int, string, error) {
@@ -71,7 +73,7 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 	cmd.Stdin = stdin
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
-	cmd.ExtraFiles = []*os.File{readyWriter}
+	cmd.ExtraFiles = []*os.File{lockFile, readyWriter}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
 		_ = readyWriter.Close()
@@ -81,22 +83,13 @@ func start(cfg *config.Config, args []string) (int, string, error) {
 
 	if err := waitForReady(readyReader); err != nil {
 		killAndWait(cmd.Process)
-		if removeErr := removePIDFile(pidPath); removeErr != nil {
+		_ = lockFile.Close()
+		if removeErr := removePIDFileIfOwned(pidPath, cmd.Process.Pid); removeErr != nil {
 			return 0, "", removeErr
 		}
 		return 0, "", fmt.Errorf("daemon failed to start; see %s", logPath)
 	}
-	pid := cmd.Process.Pid
-	if err := writePIDFile(pidPath, pid); err != nil {
-		killAndWait(cmd.Process)
-		if removeErr := removePIDFile(pidPath); removeErr != nil {
-			return 0, "", removeErr
-		}
-		return 0, "", err
-	}
-	// A concurrent start in the handoff window may launch a child, which either
-	// fails to bind or waits for this daemon's lock after the parent exits.
-	return pid, net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port)), nil
+	return cmd.Process.Pid, net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Port)), nil
 }
 
 func stop() (int, error) {
@@ -104,12 +97,16 @@ func stop() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	held, err := probeLock(lockPath)
+	lockFile, held, err := lockAcquire(lockPath)
 	if err != nil {
 		return 0, err
 	}
 	if !held {
-		return notRunning(pidPath, ErrNotRunning)
+		defer func() { _ = lockFile.Close() }()
+		if err := removePIDFile(pidPath); err != nil {
+			return 0, err
+		}
+		return 0, ErrNotRunning
 	}
 	pid, err := readPIDFile(pidPath)
 	if err != nil {
@@ -118,12 +115,18 @@ func stop() (int, error) {
 	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil && !errors.Is(err, syscall.ESRCH) {
 		return 0, fmt.Errorf("sending SIGTERM to pid %d: %w", pid, err)
 	}
-	if err := waitForExit(pid, stopTimeout); err != nil {
+	lockFile, err = waitForLockFree(lockPath, stopTimeout)
+	if errors.Is(err, errLockReleaseTimeout) {
 		if killErr := syscall.Kill(pid, syscall.SIGKILL); killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
 			return 0, fmt.Errorf("sending SIGKILL to pid %d: %w", pid, killErr)
 		}
+		lockFile, err = waitForLockFree(lockPath, killTimeout)
 	}
-	if err := removePIDFile(pidPath); err != nil {
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = lockFile.Close() }()
+	if err := removePIDFileIfOwned(pidPath, pid); err != nil {
 		return 0, err
 	}
 	return pid, nil
@@ -134,91 +137,66 @@ func status() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	held, err := probeLock(lockPath)
+	lockFile, held, err := lockAcquire(lockPath)
 	if err != nil {
 		return 0, err
 	}
-	if held {
-		pid, err := readPIDFile(pidPath)
-		if err != nil {
-			return 0, nil
+	if !held {
+		defer func() { _ = lockFile.Close() }()
+		if err := removePIDFile(pidPath); err != nil {
+			return 0, err
 		}
-		return pid, nil
-	}
-	return notRunning(pidPath, ErrNotRunning)
-}
-
-func notRunning(path string, cause error) (int, error) {
-	if err := removePIDFile(path); err != nil {
-		return 0, err
-	}
-	if cause == nil || errors.Is(cause, ErrNotRunning) {
 		return 0, ErrNotRunning
 	}
-	return 0, fmt.Errorf("checking daemon status: %w", cause)
+	pid, err := readPIDFile(pidPath)
+	if err != nil {
+		return 0, nil
+	}
+	return pid, nil
 }
 
 func prepareChild() (*Child, error) {
-	pidPath, _, lockPath, err := daemonPaths()
+	pidPath, _, _, err := daemonPaths()
 	if err != nil {
 		return nil, err
 	}
-	lockFile, err := openLockFile(lockPath)
-	if err != nil {
-		return nil, err
+	lockFile := os.NewFile(childLockFD, "daemon-lock")
+	readyWriter := os.NewFile(childReadyPipeFD, "daemon-ready")
+	if lockFile == nil || readyWriter == nil || !validChildDescriptors(lockFile, readyWriter) {
+		if lockFile != nil {
+			_ = lockFile.Close()
+		}
+		if readyWriter != nil {
+			_ = readyWriter.Close()
+		}
+		return nil, errors.New("daemon lock/pipe descriptors missing")
 	}
-	return &Child{lockFile: lockFile, pidPath: pidPath}, nil
+	return &Child{lockFile: lockFile, readyWriter: readyWriter, pidPath: pidPath}, nil
 }
 
-func childReady(child *Child) {
-	signalReady()
-	if syscall.Flock(int(child.lockFile.Fd()), syscall.LOCK_EX) != nil {
-		return
+func validChildDescriptors(lockFile, readyWriter *os.File) bool {
+	lockInfo, lockErr := lockFile.Stat()
+	readyInfo, readyErr := readyWriter.Stat()
+	return lockErr == nil && readyErr == nil && lockInfo.Mode().IsRegular() && readyInfo.Mode()&os.ModeNamedPipe != 0
+}
+
+func childReady(child *Child) error {
+	if err := writePIDFile(child.pidPath, os.Getpid()); err != nil {
+		return err
 	}
-	_ = writePIDFile(child.pidPath, os.Getpid())
+	if _, err := child.readyWriter.Write([]byte{1}); err != nil {
+		_ = child.readyWriter.Close()
+		return fmt.Errorf("signaling daemon readiness: %w", err)
+	}
+	if err := child.readyWriter.Close(); err != nil {
+		return fmt.Errorf("closing daemon readiness pipe: %w", err)
+	}
+	child.readyWriter = nil
+	return nil
 }
 
 func closeChild(child *Child) error {
 	return child.lockFile.Close()
-}
-
-func openLockFile(path string) (*os.File, error) {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
-	if err != nil {
-		return nil, fmt.Errorf("opening daemon lock file: %w", err)
-	}
-	return file, nil
-}
-
-func probeLock(path string) (bool, error) {
-	file, err := openLockFile(path)
-	if err != nil {
-		return false, err
-	}
-	defer func() { _ = file.Close() }()
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		if isLockHeld(err) {
-			return true, nil
-		}
-		return false, fmt.Errorf("probing daemon lock: %w", err)
-	}
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_UN); err != nil {
-		return false, fmt.Errorf("unlocking daemon lock: %w", err)
-	}
-	return false, nil
-}
-
-func isLockHeld(err error) bool {
-	return errors.Is(err, syscall.EWOULDBLOCK) || errors.Is(err, syscall.EAGAIN)
-}
-
-func signalReady() {
-	ready := os.NewFile(uintptr(3), "daemon-ready")
-	if ready == nil {
-		return
-	}
-	_, _ = ready.Write([]byte{1})
-	_ = ready.Close()
 }
 
 func waitForReady(ready *os.File) error {
@@ -234,21 +212,6 @@ func waitForReady(ready *os.File) error {
 		return fmt.Errorf("waiting for daemon readiness: %w", err)
 	}
 	return errors.New("daemon readiness pipe closed without a signal")
-}
-
-func waitForExit(pid int, timeout time.Duration) error {
-	deadline := time.NewTimer(timeout)
-	defer deadline.Stop()
-	ticker := time.NewTicker(pollInterval)
-	defer ticker.Stop()
-	for processAlive(pid) {
-		select {
-		case <-deadline.C:
-			return errors.New("timed out waiting for daemon to stop")
-		case <-ticker.C:
-		}
-	}
-	return nil
 }
 
 func killAndWait(process *os.Process) {

@@ -17,7 +17,7 @@ import (
 
 // Run initializes the store, session store, and HTTP server, then serves until
 // ctx is cancelled.
-func Run(ctx context.Context, cfg *config.Config, logger *slog.Logger, onReady func()) error {
+func Run(ctx context.Context, cfg *config.Config, logger *slog.Logger, onReady func() error) error {
 	st, err := store.Load(ctx, logger)
 	if err != nil {
 		return fmt.Errorf("loading store: %w", err)
@@ -44,7 +44,10 @@ func Run(ctx context.Context, cfg *config.Config, logger *slog.Logger, onReady f
 		return fmt.Errorf("http server: %w", err)
 	}
 	if onReady != nil {
-		onReady()
+		if err := onReady(); err != nil {
+			_ = ln.Close()
+			return fmt.Errorf("daemon readiness: %w", err)
+		}
 	}
 	if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("http server: %w", err)
