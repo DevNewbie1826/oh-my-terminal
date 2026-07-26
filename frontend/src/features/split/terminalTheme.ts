@@ -1,0 +1,25 @@
+/** Terminal ANSI palette — intentionally separate from UI tokens. bg/fg/cursor
+ * match --th-bg/--th-text; the 16 ANSI colors are a fixed terminal palette. */
+export const XTERM_THEME = {
+  background: "#0a0a0a",
+  foreground: "#ededed",
+  cursor: "#ededed",
+  cursorAccent: "#0a0a0a",
+  selectionBackground: "rgba(255, 255, 255, 0.22)",
+  black: "#0a0a0a",
+  red: "#e5484d",
+  green: "#30a46c",
+  yellow: "#f5a623",
+  blue: "#3b82f6",
+  magenta: "#a855f7",
+  cyan: "#06b6d4",
+  white: "#ededed",
+  brightBlack: "#5c5c5c",
+  brightRed: "#ff6b6e",
+  brightGreen: "#4cc38a",
+  brightYellow: "#ffd166",
+  brightBlue: "#60a5fa",
+  brightMagenta: "#c084fc",
+  brightCyan: "#22d3ee",
+  brightWhite: "#ffffff",
+};
