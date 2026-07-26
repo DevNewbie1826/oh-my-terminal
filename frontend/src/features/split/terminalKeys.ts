@@ -10,7 +10,6 @@ const ARROW_KEYS: Readonly<Record<string, { ctrl: string; meta: string }>> = {
   ArrowRight: { ctrl: "\x1bf", meta: "\x05" },
 };
 
-/** Registers the Shift+Enter kitty key sequence override. */
 export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef: BooleanRef): () => void {
   term.attachCustomKeyEventHandler((event) => {
     if (event.type !== "keydown") return true;
