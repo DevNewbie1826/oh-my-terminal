@@ -1,10 +1,7 @@
-/** Terminal font presets with Korean-capable coding fonts. */
-
 export type FontId = "system" | "nanum" | "jetbrains" | "fira" | "ibmplex" | "sourcecode";
 
 export interface FontPreset {
   readonly id: FontId;
-  /** i18n key for the display label. */
   readonly labelKey: string;
   /** CSS font-family stack. Korean glyphs fall through to a CJK monospace face. */
   readonly stack: string;
@@ -63,7 +60,6 @@ export function persistFont(id: FontId): void {
   window.localStorage.setItem(STORAGE_KEY, id);
 }
 
-/** Terminal font size bounds (px). */
 export const FONT_SIZE_MIN = 10;
 export const FONT_SIZE_MAX = 24;
 export const FONT_SIZE_DEFAULT = 13;

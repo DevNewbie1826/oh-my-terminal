@@ -13,7 +13,6 @@ export interface FileEditorProps {
   readonly notify: (msg: string, kind?: ToastKind) => void;
 }
 
-/** In-panel text editor: loads a file into a textarea and saves it back. */
 export function FileEditor({ path, name, onClose, notify }: FileEditorProps) {
   const { t } = useT();
   const { confirm, dialog: confirmDialog } = useConfirm(t);

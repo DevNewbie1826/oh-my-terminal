@@ -22,7 +22,6 @@ func openLockFile(path string) (*os.File, error) {
 	return file, nil
 }
 
-// lockAcquire returns an open lock file when it obtains the daemon lock.
 func lockAcquire(path string) (*os.File, bool, error) {
 	file, err := openLockFile(path)
 	if err != nil {

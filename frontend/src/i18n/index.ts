@@ -15,7 +15,6 @@ export interface I18nValue {
   readonly setFont: (font: FontId) => void;
   readonly fontSize: number;
   readonly setFontSize: (size: number) => void;
-  /** Translate a key; `{name}` placeholders are filled from vars. */
   readonly t: Translate;
 }
 

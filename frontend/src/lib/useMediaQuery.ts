@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-/** Track a CSS media query reactively. */
 export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {

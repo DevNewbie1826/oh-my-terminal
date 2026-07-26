@@ -81,7 +81,6 @@ export function useLayout(authed: boolean): LayoutApi {
     }, PERSIST_DEBOUNCE_MS);
   }, []);
 
-  /** Apply a new root: update ref + state + derived placed set, then persist. */
   const commit = useCallback(
     (next: PaneNode) => {
       rootRef.current = next;

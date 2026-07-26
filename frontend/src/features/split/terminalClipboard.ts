@@ -1,6 +1,5 @@
 import { Terminal } from "@xterm/xterm";
 
-/** Registers OSC52 clipboard writes, including the HTTP clipboard fallback. */
 export function registerTerminalClipboard(term: Terminal) {
   return term.parser.registerOscHandler(52, async (data) => {
     try {

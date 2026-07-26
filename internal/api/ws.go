@@ -18,7 +18,6 @@ import (
 
 const (
 	sessionKeyPTY     = "pty"
-	sessionKeyCmd     = "cmd"
 	sessionKeyTmux    = "tmuxSession"
 	sessionKeyCleanup = "terminalCleanup"
 
@@ -137,7 +136,6 @@ func (s *Server) OnOpen(socket *gws.Conn) {
 	}
 	cleanup := &terminalCleanup{socket: socket, ptmx: ptmx, cmd: cmd}
 	socket.Session().Store(sessionKeyPTY, ptmx)
-	socket.Session().Store(sessionKeyCmd, cmd)
 	socket.Session().Store(sessionKeyCleanup, cleanup)
 	go s.pipePTYToSocket(socket, cleanup)
 }

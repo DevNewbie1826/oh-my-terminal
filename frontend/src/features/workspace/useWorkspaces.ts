@@ -33,11 +33,6 @@ export interface UseWorkspacesResult {
   readonly handleRenameTerminal: (ws: Workspace, tm: Terminal, name: string) => Promise<void>;
 }
 
-/**
- * Owns the workspace tree's in-memory state and CRUD handlers: list loading,
- * expand/collapse tracking, and terminal/workspace create/delete/rename
- * mutations (each keeping the layout in sync via `layout`).
- */
 export function useWorkspaces({ notify, t, layout, confirm }: UseWorkspacesOptions): UseWorkspacesResult {
   const [workspaces, setWorkspaces] = useState<readonly Workspace[]>([]);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());

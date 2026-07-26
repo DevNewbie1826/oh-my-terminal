@@ -17,7 +17,6 @@ export interface WorkspaceWizardProps {
   readonly onCreated: (ws: Workspace) => void;
 }
 
-/** 3-step modal: folder picker → name → confirm. */
 export function WorkspaceWizard({ open, onClose, onCreated }: WorkspaceWizardProps) {
   const { t } = useT();
   const [step, setStep] = useState(1);
@@ -166,7 +165,6 @@ export interface FolderPickerState {
   readonly reload: () => void;
 }
 
-/** Server-side directory browser state; loads root while the wizard is open. */
 function useFolderPicker(active: boolean): FolderPickerState {
   const { t } = useT();
   const [data, setData] = useState<FsBrowse | null>(null);

@@ -13,7 +13,6 @@ export interface SystemStats {
   readonly numCpu: number;
 }
 
-/** GET /api/system/stats → host + process resource usage. */
 export async function getSystemStats(): Promise<SystemStats> {
   return apiJson<SystemStats>("/api/system/stats");
 }

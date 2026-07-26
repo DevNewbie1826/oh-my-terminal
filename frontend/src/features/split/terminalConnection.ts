@@ -1,4 +1,3 @@
-/** WebSocket codes for a clean server-side close (PTY ended), not a drop. */
 const CLOSE_NORMAL = 1000;
 const CLOSE_GOING_AWAY = 1001;
 

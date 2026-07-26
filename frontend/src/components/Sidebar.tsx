@@ -30,7 +30,6 @@ export interface SidebarProps {
 /** Viewport width below which the sidebar becomes a drawer. Keep in sync with the CSS @media queries. */
 export const MOBILE_QUERY = "(max-width: 768px)";
 
-/** 3-section sidebar (nav / tree / footer) with edge toggle; drawer on mobile. */
 export function Sidebar({
   collapsed,
   onToggleCollapse,

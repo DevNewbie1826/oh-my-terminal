@@ -11,6 +11,7 @@ interface WorkspaceFolderPickerStepProps {
 export function WorkspaceFolderPickerStep({ picker, onSelect }: WorkspaceFolderPickerStepProps) {
   const { t } = useT();
   const data = picker.data;
+  const parent = data?.parent;
 
   if (picker.error.length > 0) {
     return (
@@ -34,11 +35,11 @@ export function WorkspaceFolderPickerStep({ picker, onSelect }: WorkspaceFolderP
         <div className="th-picker-status">{t("wizard.loading")}</div>
       ) : (
         <div className="th-picker-list" role="list" aria-label={t("wizard.step1Title")}>
-          {data.parent && (
+          {parent && (
             <button
               type="button"
               className="th-picker-row"
-              onClick={() => picker.navigate(data.parent ?? "")}
+              onClick={() => picker.navigate(parent)}
             >
               <IconArrowUp size={14} />
               <span className="th-picker-row-label">{t("picker.parent")}</span>

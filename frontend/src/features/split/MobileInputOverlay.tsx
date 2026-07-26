@@ -61,8 +61,6 @@ const EXTRA_KEYS = [
  *    - no DOM reads/writes on it (the old auto-grow read scrollHeight and
  *      set style.height on every keystroke; both reset the IME state and
  *      were the actual cause of uncombined jamo)
- *  So this component is deliberately dumb: type, then press send.
- *
  * Clicking a special key preserves the browser's tap-vs-scroll discrimination
  * so a horizontal swipe does not fire a key or disturb Korean composition.
  */

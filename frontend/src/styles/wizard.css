@@ -1,5 +1,3 @@
-/* Modal overlay, dialog, wizard steps, alerts, folder picker */
-
 .th-modal-overlay {
   position: fixed;
   inset: 0;
@@ -362,12 +360,6 @@
 .th-picker-select .th-btn {
   flex: none;
   white-space: nowrap;
-}
-
-.th-picker-select-hint {
-  font-size: 11px;
-  color: var(--th-muted);
-  flex: none;
 }
 
 .th-summary {

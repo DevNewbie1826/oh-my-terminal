@@ -11,7 +11,6 @@ export interface SessionPickerProps {
   readonly onCreateTerminal: (wsId: string) => void;
 }
 
-/** Empty-pane state: choose an unplaced session, or create a new one. */
 export function SessionPicker({ workspaces, placed, onAssign, onCreateTerminal }: SessionPickerProps) {
   const { t } = useT();
   const [newWsId, setNewWsId] = useState<string>("");

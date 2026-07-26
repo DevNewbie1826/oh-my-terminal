@@ -13,17 +13,13 @@ import (
 	"time"
 )
 
-// topCPURe matches the "CPU usage: X% user, Y% sys, Z% idle" line from `top`.
 var topCPURe = regexp.MustCompile(`CPU usage:.*?([\d.]+)% idle`)
 
-// vmStatPageSizeRe matches the "Mach Virtual Memory Statistics: ... page size of N bytes" header.
 var vmStatPageSizeRe = regexp.MustCompile(`page size of (\d+) bytes`)
 
 const (
-	// defaultPageSize is the fallback when vm_stat's page size cannot be parsed.
-	defaultPageSize uint64 = 4096
-	// topSampleTimeout bounds the `top` subprocess (it normally takes ~1s).
-	topSampleTimeout = 5 * time.Second
+	defaultPageSize  uint64 = 4096
+	topSampleTimeout        = 5 * time.Second
 )
 
 var (
@@ -32,11 +28,6 @@ var (
 	darwinCPU        float64
 )
 
-// cpuPercent returns whole-system CPU utilization since the previous call.
-// On macOS it samples `top` via a background goroutine: sampling starts
-// lazily on first call and refreshes every second, so the endpoint responds
-// instantly with a fresh value. Non-blocking best-effort; returns 0 when
-// unavailable or on the first sample.
 func cpuPercent() float64 {
 	darwinSampleOnce.Do(func() {
 		go darwinCPULoop()
@@ -57,10 +48,7 @@ func darwinCPULoop() {
 	}
 }
 
-// sampleDarwinCPU runs `top -l 2 -s 1 -n 0` and parses the SECOND sample's
-// idle percentage. The first `top` sample is measured since process start and
-// is unreliable; the second is a true 1-second delta. FindAllSubmatch takes
-// the last "CPU usage" line, which is that second sample.
+// The second top sample measures a one-second interval.
 func sampleDarwinCPU() (float64, bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), topSampleTimeout)
 	defer cancel()
@@ -79,9 +67,6 @@ func sampleDarwinCPU() (float64, bool) {
 	return 100 - idle, true
 }
 
-// systemMemory reads total and used physical memory for the whole machine.
-// macOS uses sysctl for total and vm_stat for used. Returns (0, 0) when
-// unavailable.
 func systemMemory() (total, used uint64) {
 	totalOut, err := exec.Command("sysctl", "-n", "hw.memsize").Output()
 	if err != nil {
@@ -98,8 +83,7 @@ func systemMemory() (total, used uint64) {
 	return total, used
 }
 
-// darwinUsedMemory estimates used memory from vm_stat as
-// (active + wired + compressor) × page size.
+// Used memory is active, wired, and compressed pages.
 func darwinUsedMemory() uint64 {
 	out, err := exec.Command("vm_stat").Output()
 	if err != nil {

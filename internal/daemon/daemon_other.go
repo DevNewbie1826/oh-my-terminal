@@ -16,8 +16,6 @@ func status() (int, error) {
 	return 0, ErrUnsupported
 }
 
-func processAlive(_ int) bool { return false }
-
 func prepareChild() (*Child, error) {
 	return nil, ErrUnsupported
 }

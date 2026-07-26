@@ -30,7 +30,8 @@ func (s *Server) handleCreateTerminal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req createTerminalRequest
-	_ = decodeJSON(r, &req) // empty body is allowed → default name
+	// Missing or malformed request bodies select the default terminal name.
+	_ = decodeJSON(r, &req)
 
 	name := tmux.SanitizeSessionName(req.Name)
 	if name == "" {

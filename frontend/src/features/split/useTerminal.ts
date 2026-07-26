@@ -25,11 +25,9 @@ export interface UseTerminalOptions {
   readonly stack: string;
   readonly fontSize: number;
   readonly focused: boolean;
-  /** Fired after a touch long-press selection is copied to the clipboard. */
   readonly onCopied?: () => void;
 }
 
-/** Owns the xterm lifecycle: terminal creation, the PTY WebSocket, and refits. */
 export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: UseTerminalOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const connRef = useRef<WsConn | null>(null);

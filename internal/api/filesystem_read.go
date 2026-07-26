@@ -15,7 +15,6 @@ const (
 	binaryScanBytes = 1024
 )
 
-// handleBrowse lists directories only (for the folder picker).
 func (s *Server) handleBrowse(w http.ResponseWriter, r *http.Request) {
 	dir, err := s.resolvePath(r.URL.Query().Get("path"))
 	if err != nil {
@@ -41,7 +40,6 @@ func (s *Server) handleBrowse(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleList lists files and directories (for the file browser).
 func (s *Server) handleList(w http.ResponseWriter, r *http.Request) {
 	dir, err := s.resolvePath(r.URL.Query().Get("path"))
 	if err != nil {
@@ -80,7 +78,6 @@ func (s *Server) handleList(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleDownload streams a single file.
 func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	target, err := s.resolvePath(r.URL.Query().Get("path"))
 	if err != nil {
@@ -107,8 +104,6 @@ func (s *Server) handleDownload(w http.ResponseWriter, r *http.Request) {
 	http.ServeContent(w, r, filepath.Base(target), info.ModTime(), f)
 }
 
-// handleReadFile returns a text file's content for the in-app editor.
-// Rejects directories, oversized files, and binary content.
 func (s *Server) handleReadFile(w http.ResponseWriter, r *http.Request) {
 	target, err := s.resolvePath(r.URL.Query().Get("path"))
 	if err != nil {
@@ -130,8 +125,7 @@ func (s *Server) handleReadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer func() { _ = f.Close() }()
-	// Read at most maxReadBytes+1 so a file that grows between the size check
-	// and the read can never cause an unbounded allocation.
+	// Limit reads if the file grows after the stat.
 	data, err := io.ReadAll(io.LimitReader(f, maxReadBytes+1))
 	if err != nil {
 		s.writeFsError(w, err)
@@ -148,7 +142,6 @@ func (s *Server) handleReadFile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"content": string(data), "size": len(data)})
 }
 
-// isBinary reports whether data looks like binary content (NUL in the head).
 func isBinary(data []byte) bool {
 	head := data
 	if len(head) > binaryScanBytes {

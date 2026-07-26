@@ -5,6 +5,7 @@ package daemon
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,8 +13,9 @@ import (
 	"strings"
 	"syscall"
 	"testing"
-	"time"
 )
+
+const grandchildReleaseFD = childReadyPipeFD + 1
 
 // The daemon child receives the lock fd via ExtraFiles and later spawns tmux.
 // If that inherited descriptor lacks close-on-exec, every tmux process keeps
@@ -21,8 +23,12 @@ import (
 // reports "already running (starting up)" with no recovery path.
 func TestDaemonLockNotInheritedByGrandchild(t *testing.T) {
 	if os.Getenv("TH_TEST_DAEMON_GC") == "1" {
-		fmt.Fprintf(os.Stdout, "gc-ready %d\n", os.Getpid())
-		time.Sleep(5 * time.Minute)
+		if _, err := fmt.Fprintf(os.Stdout, "gc-ready %d\n", os.Getpid()); err != nil {
+			t.Fatalf("writing grandchild readiness: %v", err)
+		}
+		if _, err := io.Copy(io.Discard, os.Stdin); err != nil {
+			t.Fatalf("waiting for grandchild release: %v", err)
+		}
 		return
 	}
 	if os.Getenv("TH_TEST_DAEMON_GC_CHILD") == "1" {
@@ -31,8 +37,14 @@ func TestDaemonLockNotInheritedByGrandchild(t *testing.T) {
 			t.Fatalf("helper prepareChild() error = %v", err)
 		}
 		defer func() { _ = closeChild(child) }()
+		releaseReader := os.NewFile(grandchildReleaseFD, "grandchild-release")
+		if releaseReader == nil {
+			t.Fatal("grandchild release descriptor missing")
+		}
+		defer func() { _ = releaseReader.Close() }()
 		gc := exec.Command(os.Args[0], "-test.run=^TestDaemonLockNotInheritedByGrandchild$")
 		gc.Env = append(os.Environ(), "TH_TEST_DAEMON_GC=1")
+		gc.Stdin = releaseReader
 		gc.Stdout = os.Stdout
 		if err := gc.Start(); err != nil {
 			t.Fatalf("spawning grandchild: %v", err)
@@ -55,10 +67,22 @@ func TestDaemonLockNotInheritedByGrandchild(t *testing.T) {
 	}
 	defer func() { _ = readyReader.Close() }()
 	defer func() { _ = readyWriter.Close() }()
+	releaseReader, releaseWriter, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("creating grandchild release pipe: %v", err)
+	}
+	defer func() { _ = releaseReader.Close() }()
+	var gcPID int
+	defer func() {
+		_ = releaseWriter.Close()
+		if gcPID > 0 {
+			_ = syscall.Kill(gcPID, syscall.SIGKILL)
+		}
+	}()
 
 	cmd := exec.Command(os.Args[0], "-test.run=^TestDaemonLockNotInheritedByGrandchild$")
-	cmd.Env = append(os.Environ(), "TH_TEST_DAEMON_GC_CHILD=1", "TH_TEST_DAEMON_LOCK_PATH="+path)
-	cmd.ExtraFiles = []*os.File{owner, readyWriter}
+	cmd.Env = append(os.Environ(), "TH_TEST_DAEMON_GC_CHILD=1")
+	cmd.ExtraFiles = []*os.File{owner, readyWriter, releaseReader}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		t.Fatalf("child stdout pipe: %v", err)
@@ -80,12 +104,11 @@ func TestDaemonLockNotInheritedByGrandchild(t *testing.T) {
 			break
 		}
 	}
-	gcPid, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "gc-ready ")))
+	gcPID, err = strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(line, "gc-ready ")))
 	if err != nil {
 		_ = cmd.Process.Kill()
 		t.Fatalf("parsing grandchild pid from %q: %v", line, err)
 	}
-	defer func() { _, _ = os.FindProcess(gcPid); _ = syscall.Kill(gcPid, syscall.SIGKILL) }()
 	if err := cmd.Wait(); err != nil {
 		t.Fatalf("child exited with error: %v", err)
 	}

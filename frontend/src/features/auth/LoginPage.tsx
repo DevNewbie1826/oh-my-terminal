@@ -8,7 +8,6 @@ export interface LoginPageProps {
   readonly onLogin: () => void;
 }
 
-/** Full-screen centered password gate. */
 export function LoginPage({ onLogin }: LoginPageProps) {
   const { t, lang, setLang } = useT();
   const [password, setPassword] = useState("");

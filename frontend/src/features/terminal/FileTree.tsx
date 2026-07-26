@@ -12,7 +12,6 @@ interface FileTreeProps {
   readonly onOpenFile: (name: string, dir: string) => void;
 }
 
-/** Directories first, then alphabetical. */
 function sortEntries(entries: readonly FsEntry[]): FsEntry[] {
   return [...entries].sort((a, b) =>
     a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1,
@@ -22,7 +21,6 @@ function sortEntries(entries: readonly FsEntry[]): FsEntry[] {
 const INDENT_BASE = 8;
 const INDENT_STEP = 16;
 
-/** Row indentation for a tree depth; shared by every row so levels align. */
 function indentStyle(depth: number): { readonly paddingLeft: number } {
   return { paddingLeft: INDENT_BASE + depth * INDENT_STEP };
 }
@@ -77,7 +75,6 @@ interface FolderNodeProps extends EntryRowProps {
   readonly path: string;
 }
 
-/** Expandable directory node that lazy-loads its children on first open. */
 function FolderNode({ name, path, depth, locale, onOpenFile }: FolderNodeProps) {
   const { t } = useT();
   const [expanded, setExpanded] = useState(false);
@@ -171,7 +168,6 @@ function FolderNode({ name, path, depth, locale, onOpenFile }: FolderNodeProps) 
   );
 }
 
-/** Recursive file list rooted at the current browser path. */
 export function FileTree({ entries, path, locale, onOpenFile }: FileTreeProps) {
   return (
     <div className="th-files-list">

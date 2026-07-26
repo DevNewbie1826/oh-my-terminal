@@ -243,11 +243,3 @@ func killAndWait(process *os.Process) {
 	_ = process.Kill()
 	_, _ = process.Wait()
 }
-
-func processAlive(pid int) bool {
-	if pid <= 0 {
-		return false
-	}
-	err := syscall.Kill(pid, 0)
-	return err == nil || errors.Is(err, syscall.EPERM)
-}

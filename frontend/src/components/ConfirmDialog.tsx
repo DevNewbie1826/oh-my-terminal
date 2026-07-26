@@ -5,27 +5,15 @@ import type { Translate } from "../i18n";
 export interface ConfirmOptions {
   readonly title: string;
   readonly message: string;
-  /** Confirm button label. */
   readonly confirmLabel?: string;
-  /** Cancel button label. */
   readonly cancelLabel?: string;
-  /** Style the confirm button as destructive (red). */
   readonly danger?: boolean;
 }
 
 export interface ConfirmApi {
-  /** Show the dialog; resolves true on confirm, false on cancel/Escape. */
   readonly confirm: (opts: ConfirmOptions) => Promise<boolean>;
-  /** The dialog element — render it once near the app root. */
   readonly dialog: React.ReactNode;
 }
-
-/**
- * Imperative confirmation dialog styled like the app's modals, replacing the
- * native `window.confirm`. Mirrors the `notify()` toast pattern: call
- * `confirm(...)` and await the boolean; render `dialog` once in the tree.
- * Takes `t` as a parameter because callers (App) sit outside the i18n provider.
- */
 export function useConfirm(t: Translate): ConfirmApi {
   const [state, setState] = useState<ConfirmOptions | null>(null);
   const resolveRef = useRef<((ok: boolean) => void) | null>(null);

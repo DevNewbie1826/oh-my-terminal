@@ -29,7 +29,6 @@ function formatUptime(seconds: number): string {
   return `${sec}s`;
 }
 
-/** Modal showing live host CPU/RAM load and process info, auto-refreshed. */
 export function SystemStatsModal({ open, onClose }: SystemStatsModalProps) {
   const { t } = useT();
   const [stats, setStats] = useState<SystemStats | null>(null);

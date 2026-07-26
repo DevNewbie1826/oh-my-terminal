@@ -9,15 +9,12 @@ import (
 	"github.com/oh-my-terminal/oh-my-terminal/internal/store"
 )
 
-// maxLayoutBytes caps the stored layout blob at 1 MiB.
 const maxLayoutBytes = 1 << 20
 
-// handleGetLayout returns the persisted layout blob, or null if none is set.
 func (s *Server) handleGetLayout(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]json.RawMessage{"layout": s.store.GetLayout()})
 }
 
-// handleSetLayout stores the raw request body as the layout blob.
 func (s *Server) handleSetLayout(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxLayoutBytes)
 	raw, err := io.ReadAll(r.Body)

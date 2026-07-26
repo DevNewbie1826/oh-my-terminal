@@ -8,7 +8,6 @@ import (
 
 var serverStart = time.Now()
 
-// systemStats is the payload for GET /api/system/stats.
 type systemStats struct {
 	CPUPercent       float64 `json:"cpuPercent"`
 	MemTotalBytes    uint64  `json:"memTotalBytes"`
@@ -22,15 +21,13 @@ type systemStats struct {
 	NumCPU           int     `json:"numCpu"`
 }
 
-// handleSystemStats returns best-effort host and process resource usage.
 func (s *Server) handleSystemStats(w http.ResponseWriter, r *http.Request) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
 	memTotal, memUsed := systemMemory()
 	if memTotal == 0 {
-		// Best-effort fallback on platforms without a supported system
-		// memory source: report Go runtime memory instead.
+		// Fall back to runtime memory when host memory is unavailable.
 		memTotal = m.Sys
 		memUsed = m.HeapAlloc + m.StackInuse
 	}

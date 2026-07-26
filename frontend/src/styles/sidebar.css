@@ -1,5 +1,3 @@
-/* Sidebar: nav / body / footer, collapse toggle, session tree, mobile drawer */
-
 .th-sidebar {
   position: relative;
   width: var(--th-sidebar-w);
@@ -378,7 +376,6 @@
   border-color: var(--th-border-strong);
 }
 
-/* collapsed state keeps the toggle reachable */
 .th-sidebar--collapsed .th-sidebar-inner {
   visibility: hidden;
 }
@@ -435,7 +432,6 @@
   color: var(--th-text);
 }
 
-/* Placement indicator: filled when the session is shown in a pane. */
 .th-tree-placed {
   flex: none;
   width: 6px;

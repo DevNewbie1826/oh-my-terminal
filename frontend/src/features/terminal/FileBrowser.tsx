@@ -18,7 +18,6 @@ export interface FileBrowserProps {
   readonly notify: (msg: string, kind?: ToastKind) => void;
 }
 
-/** Floating file panel anchored over the terminal. */
 export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBrowserProps) {
   const { t, lang } = useT();
   const [data, setData] = useState<FsList | null>(null);
@@ -78,7 +77,6 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
   }, []);
 
   const locale = lang === "ko" ? "ko-KR" : "en-US";
-  const entries = data?.entries ?? [];
 
   return (
     <div
@@ -132,10 +130,10 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
             </div>
           ) : loading || !data ? (
             <div className="th-files-status">{t("wizard.loading")}</div>
-          ) : entries.length === 0 ? (
+          ) : data.entries.length === 0 ? (
             <div className="th-files-status">{t("files.empty")}</div>
           ) : (
-            <FileTree entries={entries} path={data.path} locale={locale} onOpenFile={openFile} />
+            <FileTree entries={data.entries} path={data.path} locale={locale} onOpenFile={openFile} />
           )}
         </>
       )}

@@ -3,7 +3,6 @@ package daemon
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -35,19 +34,5 @@ func TestReadPIDFileMalformedIsNotRunning(t *testing.T) {
 				t.Fatalf("readPIDFile() error = %v, want ErrNotRunning", err)
 			}
 		})
-	}
-}
-
-func TestStalePIDIsNotAlive(t *testing.T) {
-	cmd := exec.Command(os.Args[0], "-test.run=^$")
-	if err := cmd.Start(); err != nil {
-		t.Fatalf("starting helper process: %v", err)
-	}
-	pid := cmd.Process.Pid
-	if err := cmd.Wait(); err != nil {
-		t.Fatalf("waiting for helper process: %v", err)
-	}
-	if processAlive(pid) {
-		t.Fatalf("processAlive(%d) = true after the process was reaped", pid)
 	}
 }

@@ -16,9 +16,6 @@ var (
 	lastCPUIdle  uint64
 )
 
-// cpuPercent returns whole-system CPU utilization since the previous call.
-// On Linux it diffs /proc/stat jiffies. It is non-blocking best-effort and
-// returns 0 when unavailable or on the first sample.
 func cpuPercent() float64 {
 	total, idle, ok := readProcStat()
 	if !ok {
@@ -39,7 +36,6 @@ func cpuPercent() float64 {
 	return float64(deltaTotal-deltaIdle) / float64(deltaTotal) * 100
 }
 
-// readProcStat reads aggregate CPU jiffies from the "cpu" line of /proc/stat.
 func readProcStat() (total, idle uint64, ok bool) {
 	f, err := os.Open("/proc/stat")
 	if err != nil {
@@ -56,8 +52,7 @@ func readProcStat() (total, idle uint64, ok bool) {
 		if len(fields) < 5 {
 			return 0, 0, false
 		}
-		// fields[9] (guest) and fields[10] (guest_nice) are already counted
-		// inside user/nice, so skip them to avoid double-counting.
+		// Guest jiffies are already included in user and nice.
 		for i := 1; i < len(fields); i++ {
 			if i == 9 || i == 10 {
 				continue
@@ -68,7 +63,7 @@ func readProcStat() (total, idle uint64, ok bool) {
 			}
 			total += v
 		}
-		// fields[4] is idle time; fields[5] (iowait) counts as idle too.
+		// Treat iowait as idle.
 		idle, _ = strconv.ParseUint(fields[4], 10, 64)
 		if len(fields) > 5 {
 			iowait, _ := strconv.ParseUint(fields[5], 10, 64)
@@ -79,9 +74,6 @@ func readProcStat() (total, idle uint64, ok bool) {
 	return 0, 0, false
 }
 
-// systemMemory reads total and used physical memory for the whole machine.
-// Linux uses /proc/meminfo (used = total - available). Returns (0, 0) when
-// unavailable.
 func systemMemory() (total, used uint64) {
 	f, err := os.Open("/proc/meminfo")
 	if err != nil {

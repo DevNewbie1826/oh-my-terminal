@@ -1,4 +1,3 @@
-/* Reset + app shell layout */
 *,
 *::before,
 *::after {
@@ -908,7 +907,6 @@ ol {
   transform: scale(0.94);
 }
 
-/* Ctrl-combos get an accent caret so they read as distinct from plain keys. */
 .th-mobile-key--ctrl {
   color: var(--th-accent);
 }
@@ -919,7 +917,6 @@ ol {
   gap: 8px;
 }
 
-/* Toggle for the special-keys panel; mirrors the send button's footprint. */
 .th-mobile-keys-toggle {
   flex: none;
   width: 40px;

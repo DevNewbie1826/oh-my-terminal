@@ -7,8 +7,6 @@ export interface SettingsMenuProps {
   readonly onOpenStats: () => void;
 }
 
-/** Settings dropdown: language / font / font-size selectors plus a system-stats
- * entry. Closes on outside click or Escape. */
 export function SettingsMenu({ onOpenStats }: SettingsMenuProps) {
   const { t, lang, setLang, font, setFont, fontSize, setFontSize } = useT();
   const [settingsOpen, setSettingsOpen] = useState(false);

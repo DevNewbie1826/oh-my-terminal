@@ -1,8 +1,3 @@
-/**
- * Binary-tree pane layout. A leaf hosts one session (or is empty); a split
- * divides its area between two children along an axis at a draggable ratio.
- */
-
 export type SplitDir = "h" | "v";
 
 export type PaneNode =
@@ -41,7 +36,6 @@ export function leaf(sessionId: string | null = null): PaneNode {
   return { kind: "leaf", id: newPaneId(), sessionId };
 }
 
-/** Every session id currently placed in the tree. */
 export function placedSessionIds(node: PaneNode): ReadonlySet<string> {
   const out = new Set<string>();
   const walk = (n: PaneNode): void => {
@@ -61,7 +55,6 @@ export function findLeaf(node: PaneNode, id: string): PaneNode | null {
   return findLeaf(node.first, id) ?? findLeaf(node.second, id);
 }
 
-/** Replace the node with the given id; returns a new tree (or the same ref if unchanged). */
 export function replaceNode(root: PaneNode, id: string, next: PaneNode): PaneNode {
   if (root.id === id) return next;
   if (root.kind === "leaf") return root;
@@ -71,7 +64,6 @@ export function replaceNode(root: PaneNode, id: string, next: PaneNode): PaneNod
   return { ...root, first, second };
 }
 
-/** Remove the node with the given id; its sibling is promoted into the parent's place. */
 export function removeNode(root: PaneNode, id: string): PaneNode | null {
   if (root.id === id) return null;
   if (root.kind === "leaf") return root;
@@ -84,14 +76,12 @@ export function removeNode(root: PaneNode, id: string): PaneNode | null {
   return root;
 }
 
-/** Set the session hosted by a leaf. */
 export function setLeafSession(root: PaneNode, leafId: string, sessionId: string | null): PaneNode {
   const target = findLeaf(root, leafId);
   if (!target || target.kind !== "leaf") return root;
   return replaceNode(root, leafId, { ...target, sessionId });
 }
 
-/** Split a leaf into a split node whose `first` keeps the leaf's session. */
 export function splitLeaf(root: PaneNode, leafId: string, dir: SplitDir): PaneNode {
   const target = findLeaf(root, leafId);
   if (!target || target.kind !== "leaf") return root;
@@ -106,7 +96,6 @@ export function splitLeaf(root: PaneNode, leafId: string, dir: SplitDir): PaneNo
   return replaceNode(root, leafId, split);
 }
 
-/** Update the ratio of a split node, clamped to a sane range. */
 export function setRatio(root: PaneNode, splitId: string, ratio: number): PaneNode {
   const clamped = Math.min(RATIO_MAX, Math.max(RATIO_MIN, ratio));
   const walk = (n: PaneNode): PaneNode => {
@@ -120,7 +109,6 @@ export function setRatio(root: PaneNode, splitId: string, ratio: number): PaneNo
   return walk(root);
 }
 
-/** Un-place a session everywhere it appears (used when the session is deleted). */
 export function removeSession(root: PaneNode, sessionId: string): PaneNode {
   const walk = (n: PaneNode): PaneNode => {
     if (n.kind === "leaf") {
@@ -134,7 +122,6 @@ export function removeSession(root: PaneNode, sessionId: string): PaneNode {
   return walk(root);
 }
 
-/** The id of the first leaf in document order (a fallback focus target). */
 export function firstLeafId(node: PaneNode): string {
   let cur = node;
   while (cur.kind === "split") cur = cur.first;

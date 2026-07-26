@@ -12,12 +12,10 @@ import (
 
 const (
 	maxUploadBytes = 100 << 20 // 100 MiB
-	// maxWriteBytes must be >= maxReadBytes so any file the editor can load
-	// can also be saved back.
+	// The write limit must cover any file the editor can read.
 	maxWriteBytes = maxReadBytes
 )
 
-// handleWriteFile saves editor content back to a file atomically.
 func (s *Server) handleWriteFile(w http.ResponseWriter, r *http.Request) {
 	target, err := s.resolvePath(r.URL.Query().Get("path"))
 	if err != nil {
@@ -48,8 +46,6 @@ func (s *Server) handleWriteFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// writeFileAtomic writes data to a temp file in the same directory, fsyncs,
-// then renames over the target so readers never observe a partial write.
 func writeFileAtomic(path string, data []byte) error {
 	dir := filepath.Dir(path)
 	tmp, err := os.CreateTemp(dir, ".th-edit-*")
@@ -84,7 +80,7 @@ func writeFileAtomic(path string, data []byte) error {
 		return err
 	}
 	tmpName = ""
-	// Fsync the directory so the rename itself is durable, not just the data.
+	// Best-effort directory sync persists the rename.
 	if d, err := os.Open(dir); err == nil {
 		_ = d.Sync()
 		_ = d.Close()
@@ -92,7 +88,6 @@ func writeFileAtomic(path string, data []byte) error {
 	return nil
 }
 
-// handleUpload stores multipart "files" fields into the workspace directory.
 func (s *Server) handleUpload(w http.ResponseWriter, r *http.Request) {
 	ws, err := s.store.GetWorkspace(r.PathValue("wsId"))
 	if err != nil {

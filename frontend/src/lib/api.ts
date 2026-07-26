@@ -1,5 +1,3 @@
-/** Fetch wrapper: same-origin credentials, JSON handling, error normalization. */
-
 export class ApiError extends Error {
   readonly status: number;
 
@@ -45,20 +43,17 @@ function buildInit(options: RequestOptions): RequestInit {
   return init;
 }
 
-/** JSON request → parsed JSON response. */
 export async function apiJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const res = await fetch(path, buildInit(options));
   if (!res.ok) throw await parseError(res);
   return JSON.parse(await res.text());
 }
 
-/** JSON request with no meaningful response body (204/empty). */
 export async function apiVoid(path: string, options: RequestOptions = {}): Promise<void> {
   const res = await fetch(path, buildInit(options));
   if (!res.ok) throw await parseError(res);
 }
 
-/** Raw request for non-JSON payloads (multipart upload). */
 export async function apiRaw(
   path: string,
   options: RequestOptions & { readonly body: BodyInit },
@@ -74,7 +69,6 @@ export async function apiRaw(
   return res;
 }
 
-/** Build a query string from params, skipping undefined values. */
 export function qs(params: Readonly<Record<string, string | undefined>>): string {
   const usp = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {

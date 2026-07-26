@@ -15,7 +15,6 @@ type dirEntry struct {
 	ModTime time.Time `json:"modTime"`
 }
 
-// parentOf returns the parent directory, or nil at the root boundary.
 func parentOf(dir string) any {
 	parent := filepath.Dir(dir)
 	if parent == dir {

@@ -14,7 +14,6 @@ export interface ModalDialogProps {
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Accessible modal: overlay click closes, Escape closes, focus is trapped. */
 export function ModalDialog({ open, onClose, labelledBy, closeLabel = "Close", children }: ModalDialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreRef = useRef<HTMLElement | null>(null);
