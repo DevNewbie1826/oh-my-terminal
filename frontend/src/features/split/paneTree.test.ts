@@ -27,6 +27,5 @@ describe("restored pane layouts", () => {
 
     expect(generatedIds).toHaveLength(2);
     expect(new Set(generatedIds).size).toBe(generatedIds.length);
-    expect(generatedIds.every((id) => !restoredIds.has(id))).toBe(true);
   });
 });

@@ -29,7 +29,6 @@ func TestLoadResolvesRootSymlink(t *testing.T) {
 }
 
 func TestLoad(t *testing.T) {
-	// Clear config environment variables for deterministic subtests.
 	for _, key := range []string{"TH_PASSWORD", "TH_PORT", "TH_HOST", "TH_ROOT", "TH_DAEMON_CHILD"} {
 		t.Setenv(key, "")
 	}

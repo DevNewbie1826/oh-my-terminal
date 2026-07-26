@@ -8,16 +8,7 @@ import (
 	"strings"
 )
 
-const (
-	maxSessionLength = 64
-	listSeparator    = "\x1f" // unit separator, never appears in session names
-)
-
-// Session is one row of `tmux list-sessions`.
-type Session struct {
-	Name     string `json:"name"`
-	Attached bool   `json:"attached"`
-}
+const maxSessionLength = 64
 
 // SanitizeSessionName normalizes a user-supplied name into a valid tmux session
 // name: dots, colons and spaces become dashes, capped at 64 chars.
@@ -92,30 +83,4 @@ func HasSession(ctx context.Context, name string) (bool, error) {
 func RenameSession(ctx context.Context, oldName, newName string) error {
 	_, err := run(ctx, "rename-session", "-t", oldName, newName)
 	return err
-}
-
-// ListSessions lists all tmux sessions on the server.
-func ListSessions(ctx context.Context) ([]Session, error) {
-	format := "#S" + listSeparator + "#{session_attached}"
-	out, err := run(ctx, "list-sessions", "-F", format)
-	if err != nil {
-		// A missing server means zero sessions.
-		if strings.Contains(out, "no server running") || strings.Contains(out, "error connecting") {
-			return nil, nil
-		}
-		return nil, err
-	}
-	var sessions []Session
-	for _, line := range strings.Split(strings.TrimSpace(out), "\n") {
-		if line == "" {
-			continue
-		}
-		parts := strings.SplitN(line, listSeparator, 2)
-		s := Session{Name: parts[0]}
-		if len(parts) == 2 && parts[1] != "0" {
-			s.Attached = true
-		}
-		sessions = append(sessions, s)
-	}
-	return sessions, nil
 }

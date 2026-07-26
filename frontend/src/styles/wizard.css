@@ -200,12 +200,6 @@
   color: var(--th-error);
 }
 
-.th-alert--success {
-  background: var(--th-success-bg);
-  border-color: var(--th-success);
-  color: var(--th-success);
-}
-
 .th-alert--warning {
   background: var(--th-warning-bg);
   border-color: var(--th-warning);

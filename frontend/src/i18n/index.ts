@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import { FONT_SIZE_DEFAULT } from "../lib/font";
 import type { FontId } from "../lib/font";
 import en from "./locales/en.json";
 import ko from "./locales/ko.json";
@@ -25,7 +26,7 @@ export const I18nContext = createContext<I18nValue>({
   setLang: () => undefined,
   font: "system",
   setFont: () => undefined,
-  fontSize: 13,
+  fontSize: FONT_SIZE_DEFAULT,
   setFontSize: () => undefined,
   t: (key) => key,
 });

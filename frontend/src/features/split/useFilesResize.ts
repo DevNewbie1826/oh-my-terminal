@@ -18,7 +18,6 @@ function storedFilesWidth(): number {
   return Number.isFinite(parsed) ? clampFilesWidth(parsed) : FILES_DEFAULT_W;
 }
 
-/** Owns the file-browser panel width: pointer-drag, keyboard nudges, and persistence. */
 export function useFilesResize() {
   const [filesWidth, setFilesWidth] = useState(storedFilesWidth);
   const [resizing, setResizing] = useState(false);

@@ -7,6 +7,7 @@ import type { I18nValue } from "../../i18n";
 import { SplitView } from "./SplitView";
 import type { SplitActions } from "./SplitView";
 import { leaf } from "./paneTree";
+import type { PaneNode } from "./paneTree";
 
 const i18n: I18nValue = {
   lang: "en",
@@ -47,8 +48,7 @@ describe("SplitView empty pane", () => {
     container.remove();
   });
 
-  function render(actions: SplitActions, sessionId: string | null): void {
-    const node = leaf(sessionId);
+  function render(node: PaneNode, actions: SplitActions, splitEnabled = true): void {
     act(() => {
       root.render(
         <I18nContext.Provider value={i18n}>
@@ -58,7 +58,7 @@ describe("SplitView empty pane", () => {
             placed={new Set()}
             sessions={new Map()}
             focusedPaneId={node.id}
-            splitEnabled
+            splitEnabled={splitEnabled}
             actions={actions}
           />
         </I18nContext.Provider>,
@@ -67,7 +67,7 @@ describe("SplitView empty pane", () => {
   }
 
   it("renders a close button for a pane with no session", () => {
-    render(makeActions(), null);
+    render(leaf(null), makeActions());
     const close = container.querySelector<HTMLButtonElement>('button[aria-label="split.close"]');
     expect(close).not.toBeNull();
   });
@@ -75,21 +75,7 @@ describe("SplitView empty pane", () => {
   it("calls onClosePane with the pane id when the empty-pane close is clicked", () => {
     const onClosePane = vi.fn();
     const node = leaf(null);
-    act(() => {
-      root.render(
-        <I18nContext.Provider value={i18n}>
-          <SplitView
-            node={node}
-            workspaces={[]}
-            placed={new Set()}
-            sessions={new Map()}
-            focusedPaneId={node.id}
-            splitEnabled
-            actions={makeActions({ onClosePane })}
-          />
-        </I18nContext.Provider>,
-      );
-    });
+    render(node, makeActions({ onClosePane }));
     const close = container.querySelector<HTMLButtonElement>('button[aria-label="split.close"]');
     act(() => {
       close?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -98,22 +84,7 @@ describe("SplitView empty pane", () => {
   });
 
   it("hides the empty-pane close button when splitting is disabled", () => {
-    const node = leaf(null);
-    act(() => {
-      root.render(
-        <I18nContext.Provider value={i18n}>
-          <SplitView
-            node={node}
-            workspaces={[]}
-            placed={new Set()}
-            sessions={new Map()}
-            focusedPaneId={node.id}
-            splitEnabled={false}
-            actions={makeActions()}
-          />
-        </I18nContext.Provider>,
-      );
-    });
+    render(leaf(null), makeActions(), false);
     expect(container.querySelector('button[aria-label="split.close"]')).toBeNull();
   });
 });

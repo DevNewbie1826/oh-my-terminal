@@ -66,8 +66,6 @@ describe("SystemStatsModal polling", () => {
 
     await act(async () => {
       pending.resolve(stats);
-      await Promise.resolve();
-      await Promise.resolve();
     });
     act(() => {
       vi.advanceTimersByTime(2000);

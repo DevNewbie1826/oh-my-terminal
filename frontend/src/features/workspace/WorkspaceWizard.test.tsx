@@ -5,6 +5,7 @@ import type { Root } from "react-dom/client";
 import { WorkspaceWizard } from "./WorkspaceWizard";
 import { createWorkspace } from "./workspace";
 import { fsBrowse } from "../terminal/terminal";
+import type { FsBrowse } from "../terminal/terminal";
 import type { Workspace } from "./workspace";
 
 vi.mock("./workspace", () => ({ createWorkspace: vi.fn() }));
@@ -33,7 +34,6 @@ describe("WorkspaceWizard creation", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
-    vi.mocked(fsBrowse).mockResolvedValue({ path: "/work", parent: null, dirs: [] });
   });
 
   afterEach(() => {
@@ -44,6 +44,8 @@ describe("WorkspaceWizard creation", () => {
   });
 
   it("ignores a cancelled create after reopening and prevents duplicate submits", async () => {
+    const browse = deferred<FsBrowse>();
+    vi.mocked(fsBrowse).mockReturnValue(browse.promise);
     const pending = deferred<Workspace>();
     const create = vi.mocked(createWorkspace);
     create.mockReturnValue(pending.promise);
@@ -56,9 +58,9 @@ describe("WorkspaceWizard creation", () => {
     act(() => {
       render(true);
     });
+    expect(fsBrowse).toHaveBeenCalledTimes(1);
     await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
+      browse.resolve({ path: "/work", parent: null, dirs: [] });
     });
 
     const select = Array.from(document.body.querySelectorAll<HTMLButtonElement>("button"))
@@ -89,8 +91,6 @@ describe("WorkspaceWizard creation", () => {
 
     await act(async () => {
       pending.resolve({ id: "ws-1", name: "work", path: "/work", terminals: [] });
-      await Promise.resolve();
-      await Promise.resolve();
     });
     expect(onCreated).not.toHaveBeenCalled();
   });
