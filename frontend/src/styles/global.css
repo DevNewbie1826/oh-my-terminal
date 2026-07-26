@@ -652,10 +652,19 @@ ol {
 }
 
 .th-pane-wrap {
+  position: relative;
   display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+/* Floating close for empty panes (the picker has no header of its own). */
+.th-pane-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
 }
 
 .th-pane {

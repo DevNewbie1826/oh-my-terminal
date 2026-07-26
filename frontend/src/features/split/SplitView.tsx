@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useT } from "../../i18n";
+import { IconX } from "../../components/icons";
 import { TerminalPane } from "./TerminalPane";
 import { SessionPicker } from "./SessionPicker";
 import type { PaneNode, SplitDir } from "./paneTree";
@@ -42,6 +43,7 @@ type SplitData = Extract<PaneNode, { readonly kind: "split" }>;
 /** Renders a leaf: a live terminal when a session is placed, else the picker. */
 function LeafView({ node, ...rest }: SplitViewProps & { readonly node: LeafData }) {
   const { workspaces, placed, sessions, focusedPaneId, splitEnabled, actions } = rest;
+  const { t } = useT();
   const session = node.sessionId !== null ? sessions.get(node.sessionId) : undefined;
   return (
     <div className="th-pane-wrap">
@@ -61,12 +63,25 @@ function LeafView({ node, ...rest }: SplitViewProps & { readonly node: LeafData 
           notify={actions.notify}
         />
       ) : (
-        <SessionPicker
-          workspaces={workspaces}
-          placed={placed}
-          onAssign={(tmId) => actions.onAssign(node.id, tmId)}
-          onCreateTerminal={(wsId) => actions.onCreateTerminal(node.id, wsId)}
-        />
+        <>
+          {splitEnabled && (
+            <button
+              type="button"
+              className="th-btn-icon th-btn-icon--danger th-pane-close"
+              title={t("split.close")}
+              aria-label={t("split.close")}
+              onClick={() => actions.onClosePane(node.id)}
+            >
+              <IconX size={14} />
+            </button>
+          )}
+          <SessionPicker
+            workspaces={workspaces}
+            placed={placed}
+            onAssign={(tmId) => actions.onAssign(node.id, tmId)}
+            onCreateTerminal={(wsId) => actions.onCreateTerminal(node.id, wsId)}
+          />
+        </>
       )}
     </div>
   );
