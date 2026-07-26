@@ -35,18 +35,17 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
   const connRef = useRef<WsConn | null>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
-  const webglRef = useRef<WebglAddon | null>(null);
   const [status, setStatus] = useState<ConnStatus>("connecting");
   // IME composition guard: on mobile, the keyboard appearing/disappearing
   // triggers ResizeObserver → doFit → term.resize(), which can interrupt an
   // active Korean/Japanese composition. Defer fits during composition.
   const composingRef = useRef(false);
   const pendingFitRef = useRef(false);
-  // Latest-copy callback without re-creating the terminal per render.
+  // Terminal setup only changes for session IDs, but TerminalPane creates this
+  // callback on every render. Keep the latest callback without recreating xterm.
   const onCopiedRef = useRef(onCopied);
   onCopiedRef.current = onCopied;
 
-  /** Returns true (and marks a pending fit) when an IME composition is active. */
   const deferIfComposing = (): boolean => {
     if (composingRef.current) {
       pendingFitRef.current = true;
@@ -83,16 +82,15 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
     const osc52Sub = registerTerminalClipboard(term);
     term.open(el);
     const disposeTouchSelect = registerTouchSelect(term, el, () => onCopiedRef.current?.());
-    // GPU renderer with a DOM fallback when WebGL is unavailable. The addon
-    // instance is kept so it can be disposed explicitly on cleanup — xterm's
-    // addon manager otherwise disposes it during term.dispose() in an order
-    // that throws and would crash the app on session switch.
+    // GPU renderer with a DOM fallback when WebGL is unavailable. Keep the
+    // addon to dispose it before term.dispose(): xterm's addon manager tears it
+    // down in an order that throws and crashes the app on a session switch.
+    let webgl: WebglAddon | null = null;
     try {
-      const webgl = new WebglAddon();
-      webglRef.current = webgl;
+      webgl = new WebglAddon();
       term.loadAddon(webgl);
     } catch {
-      webglRef.current = null;
+      webgl = null;
       /* WebGL unsupported — xterm keeps its DOM renderer */
     }
     termRef.current = term;
@@ -110,7 +108,6 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
       sendResize();
     };
 
-    // Track IME composition on xterm's hidden textarea.
     const textarea = term.textarea;
     const settleComposition = (): void => {
       composingRef.current = false;
@@ -187,8 +184,6 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
       fitRef.current = null;
       // Dispose the WebGL renderer before the terminal to avoid the addon
       // teardown ordering bug; guard both so a disposal error never crashes.
-      const webgl = webglRef.current;
-      webglRef.current = null;
       if (webgl) {
         try {
           webgl.dispose();
@@ -213,13 +208,11 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
     if (!term || !fit) return;
     term.options.fontFamily = stack;
     term.options.fontSize = fontSize;
-    // Defer during IME composition (see doFit guard above).
     if (deferIfComposing()) return;
     if (!fitFullWidth(term, fit)) return;
     connRef.current?.send({ type: "resize", cols: term.cols, rows: term.rows });
   }, [fontSize, stack]);
 
-  // Keep the xterm focused when this pane gains app focus.
   useEffect(() => {
     if (focused) termRef.current?.focus();
   }, [focused]);

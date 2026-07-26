@@ -4,28 +4,20 @@ import type { Terminal } from "@xterm/xterm";
 import { IconArrowUp, IconKeyboard } from "../../components/icons";
 
 export interface MobileInputOverlayProps {
-  /** Ref the parent uses to focus this textarea from a tap handler. */
   readonly inputRef: MutableRefObject<HTMLTextAreaElement | null>;
   readonly termRef: MutableRefObject<Terminal | null>;
-  /** When this pane loses focus, blur the overlay so the keyboard dismisses. */
   readonly focused: boolean;
-  /** Whether the special-keys panel is expanded (owned by the pane so the
-   *  terminal can re-fit around it). */
+  /** Owned by the pane so the terminal can re-fit around the key panel. */
   readonly keysOpen: boolean;
   readonly onKeysToggle: () => void;
 }
 
-/** Non-printable keys forwarded to the terminal as escape sequences.
- *  Backspace/Delete/arrows/Home/End are intentionally omitted: in a
- *  chat-style bar they edit the textarea, not the remote PTY. */
+/** Backspace/Delete/arrows/Home/End edit the textarea rather than the remote PTY. */
 const KEY_SEQUENCES: Readonly<Record<string, string>> = {
   Escape: "\x1b",
   Tab: "\t",
 };
 
-/** Keys a mobile keyboard cannot produce. ^C/^D interrupt/EOF, ^Z suspends,
- *  ^L clears the screen, ^B is the tmux prefix, ^A/^E/^U/^K/^W/^R are
- *  readline line-editing, the rest move the cursor or page the scrollback. */
 const EXTRA_KEYS = [
   { label: "ESC", seq: "\x1b" },
   { label: "TAB", seq: "\t" },
@@ -71,11 +63,8 @@ const EXTRA_KEYS = [
  *      were the actual cause of uncombined jamo)
  *  So this component is deliberately dumb: type, then press send.
  *
- * The collapsible key panel above the bar covers keys mobile keyboards
- *  lack (ESC, arrows, Ctrl-combos, tmux prefix). Keys send on click (tap) so
- *  the browser's tap-vs-scroll discrimination keeps a horizontal swipe from
- *  firing a key, and they never touch the textarea, so Korean composition in
- *  progress is not disturbed.
+ * Clicking a special key preserves the browser's tap-vs-scroll discrimination
+ * so a horizontal swipe does not fire a key or disturb Korean composition.
  */
 export function MobileInputOverlay({
   inputRef,
@@ -91,12 +80,8 @@ export function MobileInputOverlay({
     [termRef],
   );
 
-  /** Send the textarea's value to the terminal, then reset the bar.
-   *  Newlines are preserved as LF: shells treat LF like CR (both accept the
-   *  line), while raw-mode TUIs can tell LF (Ctrl+J, often "insert newline")
-   *  apart from CR ("submit") — converting to CR made every line break act
-   *  as Enter. Clearing resets the mobile IME so the next input composes
-   *  from a clean state. */
+  /** Preserve LF: raw-mode TUIs distinguish Ctrl+J ("insert newline") from CR ("submit").
+   * Clearing gives the next input a clean IME state. */
   const flush = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
@@ -104,11 +89,11 @@ export function MobileInputOverlay({
     el.value = "";
   }, [inputRef, send]);
 
-  const onSend = useCallback(() => {
+  const onSend = () => {
     flush();
     send("\r");
     inputRef.current?.focus(); // keep the keyboard up for the next command
-  }, [flush, send, inputRef]);
+  };
 
   useEffect(() => {
     if (!focused) {
@@ -128,9 +113,7 @@ export function MobileInputOverlay({
               className={`th-mobile-key${key.label.startsWith("^") ? " th-mobile-key--ctrl" : ""}`}
               onClick={() => {
                 send(key.seq);
-                // Re-focus the textarea so the software keyboard stays up.
-                // (Do NOT preventDefault on pointerdown: on iOS Safari that
-                // cancels the follow-up click and the key would never fire.)
+                // iOS Safari cancels click when pointerdown is prevented.
                 inputRef.current?.focus();
               }}
             >

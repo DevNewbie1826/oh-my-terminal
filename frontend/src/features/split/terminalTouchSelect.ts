@@ -4,13 +4,9 @@ const LONG_PRESS_MS = 500;
 const MOVE_CANCEL_PX = 10;
 
 /**
- * xterm.js has no touch selection: a touch drag always scrolls. This adds
- * the mobile-terminal idiom — hold still for LONG_PRESS_MS to arm selection,
- * then drag. Selection is driven by replaying synthetic mouse events into
- * xterm's own mouse-based selection service, so no private APIs are touched.
- * On release the selection is copied and onCopied fires (for a toast).
- *
- * Returns a disposer.
+ * xterm.js has no touch selection: touch drags scroll. Long-press and drag
+ * selection replays synthetic mouse events into xterm's mouse selection
+ * service without private APIs.
  */
 export function registerTouchSelect(
   term: Terminal,
@@ -21,6 +17,7 @@ export function registerTouchSelect(
   let selecting = false;
   let startX = 0;
   let startY = 0;
+  const isMac = navigator.platform.toUpperCase().includes("MAC");
 
   const fireMouse = (type: string, x: number, y: number, target: EventTarget): void => {
     /* When the app (tmux/vim) owns the mouse, xterm skips local selection
@@ -30,8 +27,7 @@ export function registerTouchSelect(
        incremental mode and no selection would start. detail: 1 matters —
        xterm picks the click handler by detail and ignores synthetic
        detail-0 events. */
-    const force = term.modes.mouseTrackingMode !== "none";
-    const forceMac = navigator.platform.toUpperCase().includes("MAC");
+    const forceSelection = term.modes.mouseTrackingMode !== "none";
     target.dispatchEvent(
       new MouseEvent(type, {
         bubbles: true,
@@ -41,9 +37,8 @@ export function registerTouchSelect(
         button: 0,
         buttons: type === "mouseup" ? 0 : 1,
         detail: 1,
-        shiftKey: force && !forceMac,
-        altKey: force && forceMac,
-        view: window,
+        shiftKey: forceSelection && !isMac,
+        altKey: forceSelection && isMac,
       }),
     );
   };
@@ -89,7 +84,7 @@ export function registerTouchSelect(
     if (!t) return;
     fireMouse("mouseup", t.clientX, t.clientY, document);
     const selection = term.getSelection();
-    if (selection.trim().length > 0) {
+    if (selection.trim()) {
       void copyText(selection).then((ok) => {
         if (ok) onCopied();
       });
@@ -130,18 +125,18 @@ async function copyText(text: string): Promise<boolean> {
   } catch {
     /* permission denied — try the legacy path */
   }
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
   let ok = false;
   try {
     ok = document.execCommand("copy");
   } catch {
     /* unsupported */
   }
-  ta.remove();
+  textarea.remove();
   return ok;
 }

@@ -8,7 +8,6 @@ import type { PaneNode, SplitDir } from "./paneTree";
 import type { ToastKind } from "../../components/SessionTree";
 import type { Workspace } from "../workspace/workspace";
 
-/** A session resolved to everything a pane needs to render it. */
 export interface SessionRef {
   readonly wsId: string;
   readonly tmId: string;
@@ -40,7 +39,6 @@ export interface SplitViewProps {
 type LeafData = Extract<PaneNode, { readonly kind: "leaf" }>;
 type SplitData = Extract<PaneNode, { readonly kind: "split" }>;
 
-/** Renders a leaf: a live terminal when a session is placed, else the picker. */
 function LeafView({ node, ...rest }: SplitViewProps & { readonly node: LeafData }) {
   const { workspaces, placed, sessions, focusedPaneId, splitEnabled, actions } = rest;
   const { t } = useT();
@@ -87,7 +85,6 @@ function LeafView({ node, ...rest }: SplitViewProps & { readonly node: LeafData 
   );
 }
 
-/** Renders a split: two children separated by a draggable divider. */
 function SplitNodeView(props: SplitViewProps & { readonly node: SplitData }) {
   const { node, actions } = props;
   const { t } = useT();
@@ -142,7 +139,6 @@ function SplitNodeView(props: SplitViewProps & { readonly node: SplitData }) {
   );
 }
 
-/** Recursive pane-tree renderer: dispatches on node kind. */
 export function SplitView(props: SplitViewProps) {
   const { node } = props;
   if (node.kind === "split") {
