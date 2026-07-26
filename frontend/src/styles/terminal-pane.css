@@ -1,0 +1,83 @@
+
+@media (max-width: 768px) {
+  .th-termhead-path {
+    display: none;
+  }
+  /* Reserve space for the visible mobile input bar so terminal content
+     is not hidden behind it; more when the special-keys panel is open. */
+  .th-stage-row {
+    padding-bottom: 60px;
+  }
+  .th-stage-row--keys {
+    padding-bottom: 104px;
+  }
+}
+
+.th-stage-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  /* Anchors the file panel overlay and its resize handle. */
+  position: relative;
+}
+
+/* While dragging the divider, suppress text selection and force the resize
+   cursor even when the pointer briefly leaves the thin handle. */
+.th-stage-row--resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.th-term {
+  flex: 1;
+  min-width: 0;
+  background: var(--th-bg);
+  overflow: hidden;
+}
+
+/* Padding lives on .xterm (not .th-term) so FitAddon subtracts it when
+   computing rows/cols — otherwise it over-allocates and the last row
+   overflows below the viewport. */
+.th-term .xterm {
+  height: 100%;
+  padding: 8px 0 0 8px;
+}
+
+.th-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.th-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.th-status--connecting,
+.th-status--reconnecting {
+  color: var(--th-warning);
+  border-color: var(--th-warning);
+  background: var(--th-warning-bg);
+}
+
+.th-status--reconnecting::before {
+  animation: th-pulse 1.1s var(--th-ease) infinite;
+}
+
+.th-status--closed {
+  color: var(--th-error);
+  border-color: var(--th-error);
+  background: var(--th-error-bg);
+}
+
+/* The file panel floats over the terminal instead of splitting the view. */

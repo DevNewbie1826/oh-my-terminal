@@ -1,0 +1,60 @@
+.th-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--th-backdrop);
+  animation: th-fade-in var(--th-dur) var(--th-ease);
+}
+
+.th-modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  box-shadow: var(--th-shadow-lg);
+  outline: none;
+  animation: th-modal-in var(--th-dur-slow) var(--th-ease);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+@keyframes th-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.th-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-modal-close:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+}

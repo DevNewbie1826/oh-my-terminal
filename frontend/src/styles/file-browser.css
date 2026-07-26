@@ -1,0 +1,246 @@
+.th-files {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--th-border);
+  background: var(--th-surface);
+  box-shadow: var(--th-shadow);
+  z-index: 20;
+  transition: border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: col-resize;
+  /* Without this, touch devices treat the drag as a scroll gesture and
+     pointermove never fires. */
+  touch-action: none;
+  background: transparent;
+  border-left: 1px solid transparent;
+  z-index: 21;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-resize:hover,
+.th-files-resize:focus-visible {
+  background: var(--th-hover);
+  border-left-color: var(--th-accent);
+}
+
+.th-files-resize:active {
+  background: var(--th-active);
+}
+
+.th-files-resize:focus-visible {
+  outline: none;
+}
+
+.th-files--drag {
+  border-color: var(--th-accent);
+}
+
+.th-files-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 10px 0 14px;
+  border-bottom: 1px solid var(--th-border);
+}
+
+.th-files-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+  flex: none;
+}
+
+.th-files-path {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--th-font-mono);
+  font-size: 11px;
+  color: var(--th-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+.th-files-drop {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px;
+  padding: 12px;
+  border: 1px dashed var(--th-border-strong);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  font-size: 12px;
+  text-align: center;
+  transition: border-color var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files--drag .th-files-drop,
+.th-files-drop--busy {
+  border-color: var(--th-accent);
+  color: var(--th-text);
+  background: var(--th-hover);
+}
+
+.th-files-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 6px 10px;
+}
+
+.th-files-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  color: var(--th-text-dim);
+  transition: background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-row:hover {
+  background: var(--th-hover);
+}
+
+.th-files-row > svg {
+  flex: none;
+  color: var(--th-muted);
+}
+
+.th-files-row--muted {
+  color: var(--th-muted);
+}
+
+.th-files-chevron {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--th-faint);
+  transition: transform var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-chevron:hover {
+  color: var(--th-text);
+}
+
+.th-files-chevron--open {
+  transform: rotate(90deg);
+}
+
+.th-files-name--dir {
+  text-align: left;
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-name--dir:hover {
+  color: var(--th-text);
+}
+
+.th-files-childstatus {
+  padding: 4px 8px;
+  font-size: 11.5px;
+  color: var(--th-faint);
+}
+
+.th-files-childstatus--error {
+  color: var(--th-error);
+}
+
+.th-files-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.th-files-meta {
+  flex: none;
+  font-family: var(--th-font-mono);
+  font-size: 10.5px;
+  color: var(--th-muted);
+  white-space: nowrap;
+}
+
+.th-files-meta--dim {
+  color: var(--th-faint);
+}
+
+.th-files-dl {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--th-muted);
+  opacity: 0;
+  transition: opacity var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-row:hover .th-files-dl {
+  opacity: 1;
+}
+
+.th-files-dl:hover {
+  color: var(--th-text);
+  background: var(--th-active);
+}
+
+.th-files-status,
+.th-editor-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 14px;
+  color: var(--th-muted);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.th-files-name--link {
+  text-align: left;
+  color: var(--th-text);
+  cursor: pointer;
+  transition: color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-files-name--link:hover {
+  color: var(--th-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

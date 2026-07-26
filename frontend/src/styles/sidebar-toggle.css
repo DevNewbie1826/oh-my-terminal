@@ -1,0 +1,49 @@
+
+.th-sidebar-toggle {
+  position: absolute;
+  top: 8px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--th-border-strong);
+  background: var(--th-surface-raised);
+  color: var(--th-muted);
+  box-shadow: var(--th-shadow-sm);
+  z-index: 50;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-sidebar-toggle:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+  transform: scale(1.08);
+}
+
+.th-sidebar-toggle svg {
+  transition: transform var(--th-dur-slow) var(--th-ease);
+}
+
+.th-sidebar--collapsed .th-sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* When collapsed the sidebar has zero width, so an edge-mounted toggle would
+   hang half off-screen. Pin it fully inside the viewport and brighten it so
+   it reads clearly against the bare background. */
+.th-sidebar--collapsed .th-sidebar-toggle {
+  right: auto;
+  left: 8px;
+  color: var(--th-text-dim);
+  background: var(--th-surface);
+  border-color: var(--th-border-strong);
+}
+
+.th-sidebar--collapsed .th-sidebar-inner {
+  visibility: hidden;
+}

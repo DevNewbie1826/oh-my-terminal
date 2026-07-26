@@ -1,0 +1,150 @@
+
+/* ---- mobile input bar ----
+   A visible chat-style input row at the bottom of the terminal pane. iOS
+   Safari only raises the keyboard for a VISIBLE, real-sized input focused
+   inside a user gesture; xterm's offscreen helper textarea can't do that.
+   Korean composes internally at the text-input layer as long as nothing
+   touches the textarea during typing (no reflow, no DOM writes, no React
+   re-render) — fixed height + internal scroll keeps it untouched. */
+.th-mobile-inputbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--th-bg);
+  border-top: 1px solid var(--th-border);
+  z-index: 5;
+}
+
+/* Collapsible row of keys a mobile keyboard lacks (ESC, arrows, Ctrl-combos,
+   tmux prefix). Horizontal scroll keeps every key reachable on narrow
+   screens without a second line. */
+.th-mobile-keys {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.th-mobile-keys::-webkit-scrollbar {
+  display: none;
+}
+
+.th-mobile-key {
+  flex: none;
+  min-width: 44px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-surface);
+  color: var(--th-text-dim);
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-key:active {
+  background: var(--th-active);
+  transform: scale(0.94);
+}
+
+.th-mobile-key--ctrl {
+  color: var(--th-accent);
+}
+
+.th-mobile-inputrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.th-mobile-keys-toggle {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  background: var(--th-surface);
+  color: var(--th-muted);
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-keys-toggle--on {
+  background: var(--th-active);
+  color: var(--th-text);
+  border-color: var(--th-border-strong);
+}
+
+.th-mobile-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 120px;
+  /* CSS-only auto-grow: no JS reads/writes on the field, so the iOS Korean
+     IME composition is never disturbed (the old JS auto-grow broke it).
+     Unsupported browsers fall back to the fixed-height scrolling field. */
+  field-sizing: content;
+  overflow-y: auto;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  padding: 9px 12px;
+  background: var(--th-surface);
+  color: var(--th-text);
+  font-family: var(--th-font-mono);
+  font-size: 16px; /* ≥16px prevents iOS auto-zoom on focus */
+  line-height: 1.4;
+  resize: none;
+  outline: none;
+  caret-color: var(--th-accent);
+  transition: border-color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-input:focus {
+  border-color: var(--th-accent);
+}
+
+.th-mobile-input::placeholder {
+  color: var(--th-faint);
+}
+
+.th-mobile-send {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--th-radius);
+  background: var(--th-accent);
+  color: var(--th-accent-fg);
+  cursor: pointer;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    transform var(--th-dur-fast) var(--th-ease);
+}
+
+.th-mobile-send:hover {
+  background: var(--th-accent-hover);
+}
+
+.th-mobile-send:active {
+  transform: scale(0.92);
+}
+

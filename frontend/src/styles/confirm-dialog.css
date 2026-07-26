@@ -1,0 +1,30 @@
+
+.th-confirm {
+  padding: 22px 24px 20px;
+}
+
+.th-confirm-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.th-confirm-message {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--th-muted);
+}
+
+.th-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .th-login-brand-dot {
+    animation: none;
+  }
+}

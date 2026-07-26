@@ -1,0 +1,23 @@
+
+.th-btn-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px dashed var(--th-border-strong);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-btn-add:hover {
+  color: var(--th-text);
+  border-color: var(--th-muted);
+  background: var(--th-hover);
+}

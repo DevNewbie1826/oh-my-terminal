@@ -1,0 +1,120 @@
+
+.th-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--th-radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease),
+    border-color var(--th-dur-fast) var(--th-ease),
+    opacity var(--th-dur-fast) var(--th-ease);
+}
+
+.th-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.th-btn--primary {
+  background: var(--th-accent);
+  color: var(--th-accent-fg);
+}
+
+.th-btn--primary:hover:not(:disabled) {
+  background: var(--th-accent-hover);
+}
+
+.th-btn--ghost {
+  border: 1px solid var(--th-border);
+  color: var(--th-text-dim);
+  background: transparent;
+}
+
+.th-btn--ghost:hover:not(:disabled) {
+  background: var(--th-hover);
+  border-color: var(--th-border-strong);
+  color: var(--th-text);
+}
+
+.th-btn--danger {
+  background: var(--th-error);
+  color: var(--th-accent);
+}
+
+.th-btn--danger:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.th-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: var(--th-radius-sm);
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.th-alert--error {
+  background: var(--th-error-bg);
+  border-color: var(--th-error);
+  color: var(--th-error);
+}
+
+.th-alert--warning {
+  background: var(--th-warning-bg);
+  border-color: var(--th-warning);
+  color: var(--th-warning);
+}
+
+.th-alert svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.th-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.th-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--th-text-dim);
+}
+
+.th-input {
+  height: 38px;
+  padding: 0 12px;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  color: var(--th-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--th-dur-fast) var(--th-ease),
+    box-shadow var(--th-dur-fast) var(--th-ease);
+}
+
+.th-input::placeholder {
+  color: var(--th-faint);
+}
+
+.th-input:focus {
+  border-color: var(--th-accent);
+  box-shadow: 0 0 0 3px var(--th-ring);
+}
+
+.th-input--mono {
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+}

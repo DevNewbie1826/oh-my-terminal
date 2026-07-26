@@ -1,0 +1,87 @@
+
+.th-login {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 60% 45% at 50% -5%, var(--th-glow), transparent),
+    var(--th-bg);
+}
+
+.th-login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 34px 32px 28px;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  box-shadow: var(--th-shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: th-modal-in var(--th-dur-slow) var(--th-ease);
+}
+
+.th-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--th-muted);
+}
+
+.th-login-brand-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--th-success);
+  box-shadow: 0 0 10px var(--th-success);
+  animation: th-pulse 2.4s var(--th-ease) infinite;
+}
+
+.th-login-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--th-text);
+}
+
+.th-login-sub {
+  margin-top: -10px;
+  font-size: 13px;
+  color: var(--th-muted);
+}
+
+.th-login-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--th-faint);
+}
+
+.th-login-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  /* Never let the footnote squeeze the button onto two lines. */
+  flex: none;
+  white-space: nowrap;
+  color: var(--th-muted);
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: color var(--th-dur-fast) var(--th-ease),
+    background var(--th-dur-fast) var(--th-ease);
+}
+
+.th-login-lang:hover {
+  color: var(--th-text);
+  background: var(--th-hover);
+}

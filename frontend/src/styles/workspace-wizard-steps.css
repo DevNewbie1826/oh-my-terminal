@@ -1,0 +1,144 @@
+
+.th-picker-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: var(--th-bg);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  color: var(--th-text-dim);
+  overflow: hidden;
+}
+
+.th-picker-path-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+
+.th-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-bg);
+  padding: 5px;
+}
+
+.th-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 4px;
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+  color: var(--th-text-dim);
+  text-align: left;
+  transition: background var(--th-dur-fast) var(--th-ease),
+    color var(--th-dur-fast) var(--th-ease);
+}
+
+.th-picker-row:hover {
+  background: var(--th-hover);
+  color: var(--th-text);
+}
+
+.th-picker-row svg {
+  flex: none;
+  color: var(--th-muted);
+}
+
+.th-picker-row-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.th-picker-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  color: var(--th-muted);
+  font-size: 13px;
+}
+
+.th-picker-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--th-border-strong);
+  border-radius: var(--th-radius-sm);
+  background: var(--th-surface-raised);
+}
+
+.th-picker-select-path {
+  font-family: var(--th-font-mono);
+  font-size: 12px;
+  color: var(--th-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* The action button must never shrink — the path absorbs overflow instead. */
+.th-picker-select .th-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+.th-summary {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  overflow: hidden;
+  background: var(--th-bg);
+}
+
+.th-summary-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+}
+
+.th-summary-row + .th-summary-row {
+  border-top: 1px solid var(--th-border);
+}
+
+.th-summary-key {
+  flex: none;
+  width: 84px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--th-faint);
+  padding-top: 2px;
+}
+
+.th-summary-val {
+  font-family: var(--th-font-mono);
+  font-size: 13px;
+  color: var(--th-text);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import type { Terminal } from "@xterm/xterm";
@@ -24,6 +24,7 @@ describe("MobileInputOverlay", () => {
   let input: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -48,6 +49,7 @@ describe("MobileInputOverlay", () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.unstubAllGlobals();
   });
 
   it("sends multi-line input with newlines preserved, then a carriage return", () => {

@@ -1,0 +1,94 @@
+
+.th-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--th-faint);
+  padding: 24px;
+  text-align: center;
+}
+
+.th-empty-glyph {
+  font-family: var(--th-font-mono);
+  font-size: 15px;
+  color: var(--th-muted);
+  border: 1px dashed var(--th-border-strong);
+  border-radius: var(--th-radius);
+  padding: 14px 20px;
+  background: var(--th-surface);
+}
+
+.th-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--th-text-dim);
+}
+
+.th-empty-hint {
+  font-size: 13px;
+  color: var(--th-muted);
+  max-width: 340px;
+}
+
+.th-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--th-radius);
+  border: 1px solid var(--th-border-strong);
+  background: var(--th-surface-raised);
+  color: var(--th-text);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--th-shadow);
+  animation: th-toast-in var(--th-dur-slow) var(--th-ease);
+}
+
+.th-toast--success {
+  border-color: var(--th-success);
+  color: var(--th-success);
+}
+
+.th-toast--error {
+  border-color: var(--th-error);
+  color: var(--th-error);
+}
+
+@keyframes th-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--th-border);
+  border-radius: 5px;
+  border: 2px solid var(--th-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--th-border-strong);
+}
