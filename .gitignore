@@ -15,3 +15,5 @@ omt
 .qa/
 *.prof
 .env
+frontend/dist/*.png
+frontend/dist/manifest.json
