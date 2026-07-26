@@ -35,7 +35,6 @@ interface RenameTarget {
   readonly tmId: string;
 }
 
-/** Workspace > terminal tree with hover actions and inline rename. */
 export function SessionTree({
   workspaces,
   activeTerminalId,

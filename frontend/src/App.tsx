@@ -20,9 +20,7 @@ import { useWorkspaces } from "./features/workspace/useWorkspaces";
 import { IconMenu } from "./components/icons";
 import { useConfirm } from "./components/ConfirmDialog";
 
-/** Viewport width at or above which split-pane mode is offered. */
 const SPLIT_QUERY = "(min-width: 1024px)";
-/** How long a toast stays visible before auto-dismissing. */
 const TOAST_DISMISS_MS = 2600;
 
 interface Toast {
@@ -118,8 +116,6 @@ export function App() {
   const selectTerminal = (ws: Workspace, tm: Terminal): void => {
     setExpanded((prev) => new Set(prev).add(ws.id));
     if (window.matchMedia(MOBILE_QUERY).matches) setSidebarCollapsed(true);
-    // If the session is already placed, focus its pane; otherwise place it in
-    // the focused pane.
     if (!layout.focusSession(tm.id)) {
       layout.assignSession(layout.focusedPaneId, tm.id);
     }
@@ -153,9 +149,10 @@ export function App() {
 
   return (
     <I18nContext.Provider value={i18n}>
-      {authed === null ? null : !authed ? (
+      {authed === false && (
         <LoginPage onLogin={handleLogin} />
-      ) : (
+      )}
+      {authed === true && (
         <div className="th-app">
           <Sidebar
             collapsed={sidebarCollapsed}

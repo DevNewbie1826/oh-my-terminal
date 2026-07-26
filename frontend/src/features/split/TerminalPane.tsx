@@ -28,7 +28,6 @@ export interface TerminalPaneProps {
   readonly name: string;
   readonly path: string;
   readonly focused: boolean;
-  /** When false, split/close controls are hidden (single-terminal mode). */
   readonly splitEnabled: boolean;
   readonly onFocus: () => void;
   readonly onSplit: (dir: SplitDir) => void;
@@ -37,7 +36,6 @@ export interface TerminalPaneProps {
   readonly notify: (msg: string, kind?: ToastKind) => void;
 }
 
-/** A single xterm.js pane bridged to the backend PTY over WebSocket. */
 export function TerminalPane({
   wsId,
   tmId,

@@ -53,7 +53,6 @@ type Store struct {
 	data   state
 }
 
-// StateDir returns the directory used for persistent application state.
 func StateDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -98,7 +97,6 @@ func Load(ctx context.Context, logger *slog.Logger) (*Store, error) {
 	return s, nil
 }
 
-// pruneDead removes terminals whose tmux session no longer exists.
 func (s *Store) pruneDead(ctx context.Context) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -183,7 +181,6 @@ func copyWorkspace(ws Workspace) Workspace {
 	return ws
 }
 
-// CreateWorkspace appends a workspace and flushes.
 func (s *Store) CreateWorkspace(name, path string) (Workspace, error) {
 	id, err := newID("ws-")
 	if err != nil {
@@ -221,7 +218,6 @@ func (s *Store) DeleteWorkspace(id string) (Workspace, error) {
 	return removed, nil
 }
 
-// RenameWorkspace updates a workspace's display name.
 func (s *Store) RenameWorkspace(id, name string) (Workspace, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

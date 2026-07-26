@@ -23,16 +23,13 @@ const (
 	defaultRows = 24
 )
 
-// WebSocket wire message types.
 const (
 	msgPing   = "ping"
-	msgPong   = "pong"
 	msgInput  = "input"
 	msgResize = "resize"
 	msgOutput = "output"
 )
 
-// pongFrame is the precomputed reply to a client keepalive ping.
 var pongFrame = []byte(`{"type":"pong"}`)
 
 type wsIncoming struct {

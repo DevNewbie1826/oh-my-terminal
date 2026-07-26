@@ -23,15 +23,10 @@ const KEY_SEQUENCES: Readonly<Record<string, string>> = {
   Tab: "\t",
 };
 
-interface ExtraKey {
-  readonly label: string;
-  readonly seq: string;
-}
-
 /** Keys a mobile keyboard cannot produce. ^C/^D interrupt/EOF, ^Z suspends,
  *  ^L clears the screen, ^B is the tmux prefix, ^A/^E/^U/^K/^W/^R are
  *  readline line-editing, the rest move the cursor or page the scrollback. */
-const EXTRA_KEYS: readonly ExtraKey[] = [
+const EXTRA_KEYS = [
   { label: "ESC", seq: "\x1b" },
   { label: "TAB", seq: "\t" },
   { label: "⌫", seq: "\x7f" },
@@ -54,11 +49,9 @@ const EXTRA_KEYS: readonly ExtraKey[] = [
   { label: "END", seq: "\x1b[F" },
   { label: "PGUP", seq: "\x1b[5~" },
   { label: "PGDN", seq: "\x1b[6~" },
-];
+] as const;
 
 /**
- * Chat-style input bar for mobile terminals.
- *
  * Why a separate textarea instead of xterm's own:
  *  - xterm's helper textarea is invisible/offscreen; iOS only raises the
  *    software keyboard for a visible, real-sized input focused inside a
@@ -104,7 +97,7 @@ export function MobileInputOverlay({
   const flush = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
-    if (el.value.length > 0) send(el.value.replace(/\n/g, "\r"));
+    send(el.value.replace(/\n/g, "\r"));
     el.value = "";
   }, [inputRef, send]);
 
@@ -114,7 +107,6 @@ export function MobileInputOverlay({
     inputRef.current?.focus(); // keep the keyboard up for the next command
   }, [flush, send, inputRef]);
 
-  /* Flush pending text when the pane loses focus, then drop the keyboard. */
   useEffect(() => {
     if (!focused) {
       flush();
