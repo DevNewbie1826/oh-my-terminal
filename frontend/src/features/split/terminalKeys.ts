@@ -13,10 +13,10 @@ const ARROW_KEYS: Readonly<Record<string, { ctrl: string; meta: string }>> = {
 export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef: BooleanRef): () => void {
   term.attachCustomKeyEventHandler((event) => {
     if (event.type !== "keydown") return true;
-    // xterm ignores Meta+Arrow (browser/OS shortcut) and shells do not bind
-    // xterm's Ctrl+Arrow sequence, so remap both to sequences every readline
-    // understands: Ctrl+Arrow to word motion, Cmd+Arrow to line start/end.
-    if (!event.shiftKey && !event.altKey) {
+    // xterm ignores Meta+Arrow (browser/OS shortcut) and most shells have no
+    // binding for xterm's Ctrl+Arrow sequence, so remap both to conventional
+    // readline sequences: Ctrl+Arrow to word motion, Cmd+Arrow to line ends.
+    if (!event.shiftKey && !event.altKey && !event.isComposing && !composingRef.current) {
       const mapping = ARROW_KEYS[event.key];
       if (mapping && event.ctrlKey !== event.metaKey) {
         event.preventDefault();
