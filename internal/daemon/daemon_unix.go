@@ -176,7 +176,24 @@ func prepareChild() (*Child, error) {
 		}
 		return nil, errors.New("daemon lock/pipe descriptors missing")
 	}
+	// The daemon must hold the lock for its whole life but never hand it to
+	// the processes it spawns: an inherited lock fd survives the daemon inside
+	// tmux, and then --stop reports not running while --daemon reports
+	// "already running (starting up)" with no recovery path.
+	if err := setCloseOnExec(lockFile); err != nil {
+		_ = lockFile.Close()
+		_ = readyWriter.Close()
+		return nil, fmt.Errorf("marking daemon lock close-on-exec: %w", err)
+	}
 	return &Child{lockFile: lockFile, readyWriter: readyWriter, pidPath: pidPath}, nil
+}
+
+func setCloseOnExec(file *os.File) error {
+	_, _, errno := syscall.Syscall(syscall.SYS_FCNTL, file.Fd(), syscall.F_SETFD, syscall.FD_CLOEXEC)
+	if errno != 0 {
+		return errno
+	}
+	return nil
 }
 
 func validChildDescriptors(lockFile, readyWriter *os.File) bool {
