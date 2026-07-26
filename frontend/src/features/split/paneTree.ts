@@ -23,10 +23,18 @@ export const DEFAULT_RATIO = 0.5;
 const RATIO_MIN = 0.1;
 const RATIO_MAX = 0.9;
 
-let nextPaneId = 0;
+let fallbackPaneId = 0;
+
+/**
+ * Use UUIDs so pane ids created after a reload cannot reuse ids restored from
+ * the persisted layout. randomUUID is secure-context-only, so retain a
+ * timestamped fallback for plain-HTTP LAN deployments.
+ */
 export function newPaneId(): string {
-  nextPaneId += 1;
-  return `pane-${nextPaneId}`;
+  const crypto = globalThis.crypto;
+  if (typeof crypto?.randomUUID === "function") return `pane-${crypto.randomUUID()}`;
+  fallbackPaneId += 1;
+  return `pane-${Date.now().toString(36)}-${fallbackPaneId}-${Math.random().toString(36).slice(2)}`;
 }
 
 export function leaf(sessionId: string | null = null): PaneNode {
