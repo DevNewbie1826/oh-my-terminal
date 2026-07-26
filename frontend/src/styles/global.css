@@ -39,6 +39,10 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
+html[data-th-keyboard-open] #root {
+  padding-bottom: 0;
+}
+
 body {
   background: var(--th-bg);
   color: var(--th-text);
