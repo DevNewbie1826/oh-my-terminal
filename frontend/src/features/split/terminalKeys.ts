@@ -10,8 +10,7 @@ const ARROW_KEYS: Readonly<Record<string, { ctrl: string; meta: string }>> = {
   ArrowRight: { ctrl: "\x1bf", meta: "\x05" },
 };
 
-// xterm drops Meta for Backspace (degrades to plain DEL), so remap the iTerm
-// conventions: Cmd+Backspace to Ctrl+U, Cmd+Delete to Ctrl+K.
+// xterm drops Meta for Backspace; remap the iTerm conventions.
 const META_EDIT_KEYS: Readonly<Record<string, string>> = {
   Backspace: "\x15",
   Delete: "\x0b",
@@ -49,8 +48,7 @@ export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef:
       !event.isComposing &&
       !composingRef.current
     ) {
-      // This beta's _keyDown early-returns on `false` without cancelling the
-      // DOM event, so preventDefault ourselves or keypress still emits CR.
+      // Returning false does not cancel the DOM event in this xterm beta.
       event.preventDefault();
       conn.send({ type: "input", data: "\x1b[13;2u" });
       return false;
@@ -58,7 +56,6 @@ export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef:
     return true;
   });
 
-  // xterm exposes no disposable for custom key handlers. Restore its default
-  // handler before the hook disposes the terminal.
+  // Restore xterm's default handler; custom handlers have no disposable.
   return () => term.attachCustomKeyEventHandler(() => true);
 }
