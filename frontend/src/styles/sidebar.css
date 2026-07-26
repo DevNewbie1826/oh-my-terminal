@@ -546,6 +546,11 @@
     width: var(--th-sidebar-w);
     transform: translateX(0);
     box-shadow: var(--th-shadow-lg);
+    /* Fixed elements are contained by #root's padding box (it has a
+       transform), so #root's safe-area padding does not reach the sidebar;
+       carve the insets out here too. */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .th-sidebar--collapsed {
