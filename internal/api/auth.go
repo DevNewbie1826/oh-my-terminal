@@ -12,23 +12,22 @@ type loginRequest struct {
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	ip := clientIP(r)
-	if s.sessions.Banned(ip) {
-		writeError(w, http.StatusTooManyRequests, "too many failed attempts, try again later")
-		return
-	}
 
 	var req loginRequest
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if !s.sessions.CheckPassword(req.Password) {
-		s.sessions.RecordFailure(ip)
+	authenticated, banned := s.sessions.Authenticate(ip, req.Password)
+	if banned {
+		writeError(w, http.StatusTooManyRequests, "too many failed attempts, try again later")
+		return
+	}
+	if !authenticated {
 		writeError(w, http.StatusUnauthorized, "invalid password")
 		return
 	}
 
-	s.sessions.ResetFailures(ip)
 	token, err := s.sessions.Create(r.Context())
 	if err != nil {
 		s.logger.Error("creating session token", "err", err)

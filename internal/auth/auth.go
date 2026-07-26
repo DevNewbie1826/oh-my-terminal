@@ -57,12 +57,6 @@ func NewSessionStore(ctx context.Context, password string, logger *slog.Logger) 
 	return s
 }
 
-// CheckPassword reports whether candidate matches the configured password.
-func (s *SessionStore) CheckPassword(candidate string) bool {
-	got := sha256.Sum256([]byte(candidate))
-	return subtle.ConstantTimeCompare(got[:], s.passwordHash[:]) == 1
-}
-
 // Create issues a new random token valid for SessionTTL.
 func (s *SessionStore) Create(ctx context.Context) (string, error) {
 	raw := make([]byte, tokenBytes)
@@ -100,38 +94,36 @@ func (s *SessionStore) Revoke(token string) {
 	s.mu.Unlock()
 }
 
-// Banned reports whether ip is currently banned.
-func (s *SessionStore) Banned(ip string) bool {
+// Authenticate atomically checks the ban state and records the result of one
+// password attempt. It returns whether the password was accepted and whether
+// the IP was already banned.
+func (s *SessionStore) Authenticate(ip, candidate string) (authenticated, banned bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	rec, ok := s.failures[ip]
-	return ok && time.Now().Before(rec.bannedUntil)
-}
 
-// RecordFailure counts a failed login for ip and reports whether ip is now banned.
-func (s *SessionStore) RecordFailure(ip string) bool {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	now := time.Now()
 	rec := s.failures[ip]
+	if rec != nil && now.Before(rec.bannedUntil) {
+		return false, true
+	}
+
+	got := sha256.Sum256([]byte(candidate))
+	if subtle.ConstantTimeCompare(got[:], s.passwordHash[:]) == 1 {
+		delete(s.failures, ip)
+		return true, false
+	}
+
 	if rec == nil {
 		rec = &failureRecord{}
 		s.failures[ip] = rec
 	}
 	rec.count++
 	if rec.count >= maxFailures {
-		rec.bannedUntil = time.Now().Add(banDuration)
+		rec.bannedUntil = now.Add(banDuration)
 		rec.count = 0
 		s.logger.Warn("banning ip after repeated login failures", "ip", ip, "ban", banDuration)
-		return true
 	}
-	return false
-}
-
-// ResetFailures clears failure tracking for ip after a successful login.
-func (s *SessionStore) ResetFailures(ip string) {
-	s.mu.Lock()
-	delete(s.failures, ip)
-	s.mu.Unlock()
+	return false, false
 }
 
 func (s *SessionStore) janitor(ctx context.Context) {
