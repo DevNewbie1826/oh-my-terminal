@@ -943,6 +943,10 @@ ol {
   min-width: 0;
   min-height: 40px;
   max-height: 120px;
+  /* CSS-only auto-grow: no JS reads/writes on the field, so the iOS Korean
+     IME composition is never disturbed (the old JS auto-grow broke it).
+     Unsupported browsers fall back to the fixed-height scrolling field. */
+  field-sizing: content;
   overflow-y: auto;
   border: 1px solid var(--th-border);
   border-radius: var(--th-radius);
