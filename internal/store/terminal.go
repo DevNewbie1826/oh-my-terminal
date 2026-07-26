@@ -94,6 +94,8 @@ func NewTerminalID() (string, error) {
 	return newID("tm-")
 }
 
+const maxTerminalNameAttempts = 1000
+
 // DefaultTerminalName picks "<folder>-N" with the next free N, avoiding
 // collisions with existing tmux sessions.
 func (s *Store) DefaultTerminalName(ctx context.Context, ws *Workspace) (string, error) {
@@ -110,7 +112,7 @@ func (s *Store) DefaultTerminalName(ctx context.Context, ws *Workspace) (string,
 	}
 	s.mu.RUnlock()
 
-	for n := 1; ; n++ {
+	for n := 1; n <= maxTerminalNameAttempts; n++ {
 		candidate := tmux.SanitizeSessionName(fmt.Sprintf("%s-%d", folder, n))
 		if taken[candidate] {
 			continue
@@ -123,4 +125,5 @@ func (s *Store) DefaultTerminalName(ctx context.Context, ws *Workspace) (string,
 			return candidate, nil
 		}
 	}
+	return "", fmt.Errorf("no available terminal name after %d attempts", maxTerminalNameAttempts)
 }
