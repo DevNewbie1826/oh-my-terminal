@@ -10,6 +10,13 @@ const ARROW_KEYS: Readonly<Record<string, { ctrl: string; meta: string }>> = {
   ArrowRight: { ctrl: "\x1bf", meta: "\x05" },
 };
 
+// xterm drops Meta for Backspace (degrades to plain DEL), so remap the iTerm
+// conventions: Cmd+Backspace to Ctrl+U, Cmd+Delete to Ctrl+K.
+const META_EDIT_KEYS: Readonly<Record<string, string>> = {
+  Backspace: "\x15",
+  Delete: "\x0b",
+};
+
 export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef: BooleanRef): () => void {
   term.attachCustomKeyEventHandler((event) => {
     if (event.type !== "keydown") return true;
@@ -21,6 +28,12 @@ export function registerTerminalKeys(term: Terminal, conn: WsConn, composingRef:
       if (mapping && event.ctrlKey !== event.metaKey) {
         event.preventDefault();
         conn.send({ type: "input", data: event.ctrlKey ? mapping.ctrl : mapping.meta });
+        return false;
+      }
+      const editSeq = META_EDIT_KEYS[event.key];
+      if (editSeq && event.metaKey && !event.ctrlKey) {
+        event.preventDefault();
+        conn.send({ type: "input", data: editSeq });
         return false;
       }
     }
