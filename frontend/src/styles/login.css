@@ -85,3 +85,9 @@
   color: var(--th-text);
   background: var(--th-hover);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .th-login-brand-dot {
+    animation: none;
+  }
+}

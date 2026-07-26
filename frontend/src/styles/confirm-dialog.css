@@ -22,9 +22,3 @@
   gap: 8px;
   margin-top: 20px;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .th-login-brand-dot {
-    animation: none;
-  }
-}

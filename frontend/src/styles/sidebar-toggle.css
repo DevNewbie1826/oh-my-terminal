@@ -47,3 +47,13 @@
 .th-sidebar--collapsed .th-sidebar-inner {
   visibility: hidden;
 }
+
+@media (max-width: 768px) {
+  .th-sidebar-toggle {
+    display: none;
+  }
+
+  .th-sidebar--collapsed .th-sidebar-inner {
+    visibility: visible;
+  }
+}

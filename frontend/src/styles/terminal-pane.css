@@ -1,8 +1,5 @@
 
 @media (max-width: 768px) {
-  .th-termhead-path {
-    display: none;
-  }
   /* Reserve space for the visible mobile input bar so terminal content
      is not hidden behind it; more when the special-keys panel is open. */
   .th-stage-row {

@@ -8,39 +8,6 @@
 }
 
 @media (max-width: 768px) {
-  .th-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    /* fixed positioning anchors to the layout viewport, which on iOS extends
-       behind the URL bar / keyboard — size to the visual viewport instead so
-       the footer stays visible. */
-    height: 100vh;
-    height: calc(var(--th-vh-unit, 1vh) * 100);
-    width: var(--th-sidebar-w);
-    transform: translateX(0);
-    box-shadow: var(--th-shadow-lg);
-    /* Fixed elements are contained by #root's padding box (it has a
-       transform), so #root's safe-area padding does not reach the sidebar;
-       carve the insets out here too. */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  .th-sidebar--collapsed {
-    width: var(--th-sidebar-w);
-    transform: translateX(-100%);
-    border-right-color: var(--th-border);
-  }
-
-  .th-sidebar--collapsed .th-sidebar-inner {
-    visibility: visible;
-  }
-
-  .th-sidebar-toggle {
-    display: none;
-  }
-
   .th-backdrop {
     display: block;
     position: fixed;
@@ -65,11 +32,5 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .th-sidebar-logo-dot {
-    animation: none;
   }
 }
