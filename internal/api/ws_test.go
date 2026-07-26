@@ -75,7 +75,7 @@ func webSocketHandshakeStatus(t *testing.T, address, path, origin, token string)
 	if err != nil {
 		t.Fatalf("dialing WebSocket endpoint: %v", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	var request strings.Builder
 	fmt.Fprintf(&request, "GET %s HTTP/1.1\r\n", path)
@@ -97,6 +97,6 @@ func webSocketHandshakeStatus(t *testing.T, address, path, origin, token string)
 	if err != nil {
 		t.Fatalf("reading WebSocket handshake: %v", err)
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	return response.StatusCode
 }
