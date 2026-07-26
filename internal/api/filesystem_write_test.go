@@ -56,6 +56,43 @@ func TestHandleWriteFileAcceptsContentAboveOneMiB(t *testing.T) {
 	}
 }
 
+func TestHandleWriteFileAcceptsMaxSizeContentWithHeavyEscaping(t *testing.T) {
+	s, root := newWriteTestServer(t)
+	path := filepath.Join(root, "editor.txt")
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatalf("creating target file: %v", err)
+	}
+
+	// Newlines double in JSON; control chars expand 6x. A max-size file of
+	// either must still save, or the read/save round trip breaks at the cap.
+	for name, content := range map[string]string{
+		"newlines": strings.Repeat("\n", maxWriteBytes),
+		"controls": strings.Repeat("\x01", maxWriteBytes),
+	} {
+		t.Run(name, func(t *testing.T) {
+			body, err := json.Marshal(map[string]string{"content": content})
+			if err != nil {
+				t.Fatalf("encoding request: %v", err)
+			}
+			recorder := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodPost, "/api/fs/write?path=editor.txt", bytes.NewReader(body))
+
+			s.handleWriteFile(recorder, req)
+
+			if recorder.Code != http.StatusNoContent {
+				t.Fatalf("status = %d, want %d: %s", recorder.Code, http.StatusNoContent, recorder.Body.String())
+			}
+			written, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("reading saved file: %v", err)
+			}
+			if string(written) != content {
+				t.Fatalf("saved content length = %d, want %d", len(written), len(content))
+			}
+		})
+	}
+}
+
 func TestHandleWriteFileRejectsOversizedBody(t *testing.T) {
 	s, root := newWriteTestServer(t)
 	path := filepath.Join(root, "editor.txt")

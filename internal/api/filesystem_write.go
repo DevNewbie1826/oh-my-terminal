@@ -22,7 +22,11 @@ func (s *Server) handleWriteFile(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	r.Body = http.MaxBytesReader(w, r.Body, maxWriteBytes+4096)
+	// The client sends content as JSON; escaping can inflate a max-size
+	// payload to 6x (control chars become \u00XX). The body cap must absorb
+	// that or valid editor-readable files fail to save; the post-decode
+	// length check below is the real limit.
+	r.Body = http.MaxBytesReader(w, r.Body, 6*maxWriteBytes+4096)
 	var req struct {
 		Content string `json:"content"`
 	}
