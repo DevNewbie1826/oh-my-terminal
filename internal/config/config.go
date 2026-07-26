@@ -87,13 +87,17 @@ func Load(ctx context.Context, args []string) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("resolving root directory: %w", err)
 	}
-	info, err := os.Stat(absRoot)
+	resolvedRoot, err := filepath.EvalSymlinks(absRoot)
 	if err != nil {
-		return nil, fmt.Errorf("root directory %s: %w", absRoot, err)
+		return nil, fmt.Errorf("resolving root directory symlinks: %w", err)
+	}
+	info, err := os.Stat(resolvedRoot)
+	if err != nil {
+		return nil, fmt.Errorf("root directory %s: %w", resolvedRoot, err)
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("root %s is not a directory", absRoot)
+		return nil, fmt.Errorf("root %s is not a directory", resolvedRoot)
 	}
-	cfg.Root = absRoot
+	cfg.Root = resolvedRoot
 	return cfg, nil
 }

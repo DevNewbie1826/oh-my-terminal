@@ -2,10 +2,31 @@ package config
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestLoadResolvesRootSymlink(t *testing.T) {
+	target := t.TempDir()
+	link := filepath.Join(t.TempDir(), "root")
+	if err := os.Symlink(target, link); err != nil {
+		t.Skipf("creating root symlink: %v", err)
+	}
+	want, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		t.Fatalf("resolving target directory: %v", err)
+	}
+
+	cfg, err := Load(context.Background(), []string{"--password", "x", "--root", link})
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Root != want {
+		t.Fatalf("Config.Root = %q, want resolved root %q", cfg.Root, want)
+	}
+}
 
 func TestLoad(t *testing.T) {
 	// Clear config environment variables for deterministic subtests.
