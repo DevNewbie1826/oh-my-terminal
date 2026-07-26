@@ -32,7 +32,12 @@ type Server struct {
 // New creates the API server.
 func New(cfg *config.Config, st *store.Store, sessions *auth.SessionStore, logger *slog.Logger) *Server {
 	s := &Server{cfg: cfg, store: st, sessions: sessions, logger: logger}
-	s.upgrader = gws.NewUpgrader(s, &gws.ServerOption{Recovery: gws.Recovery})
+	s.upgrader = gws.NewUpgrader(s, &gws.ServerOption{
+		Recovery: gws.Recovery,
+		Authorize: func(r *http.Request, _ gws.SessionStorage) bool {
+			return wsOriginAllowed(r)
+		},
+	})
 	return s
 }
 

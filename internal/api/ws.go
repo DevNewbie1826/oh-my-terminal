@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"strings"
+	"sync"
 	"unicode/utf8"
 
 	"github.com/creack/pty"
@@ -14,9 +17,10 @@ import (
 )
 
 const (
-	sessionKeyPTY  = "pty"
-	sessionKeyCmd  = "cmd"
-	sessionKeyTmux = "tmuxSession"
+	sessionKeyPTY     = "pty"
+	sessionKeyCmd     = "cmd"
+	sessionKeyTmux    = "tmuxSession"
+	sessionKeyCleanup = "terminalCleanup"
 
 	ptyReadSize = 32 * 1024
 	defaultCols = 80
@@ -44,7 +48,51 @@ type wsOutput struct {
 	Data string `json:"data"`
 }
 
+type terminalCleanup struct {
+	once   sync.Once
+	socket *gws.Conn
+	ptmx   *os.File
+	cmd    *exec.Cmd
+}
+
+func (t *terminalCleanup) close() {
+	t.once.Do(func() {
+		_ = t.ptmx.Close()
+		if t.cmd.Process != nil {
+			_ = t.cmd.Process.Kill()
+		}
+		_ = t.cmd.Wait()
+		_ = t.socket.WriteClose(1000, nil)
+	})
+}
+
+// wsOriginAllowed permits command-line clients with no Origin header and
+// browser requests whose origin authority matches the requested host.
+func wsOriginAllowed(r *http.Request) bool {
+	origins := r.Header.Values("Origin")
+	if len(origins) == 0 {
+		return true
+	}
+	if len(origins) != 1 || origins[0] == "" {
+		return false
+	}
+
+	origin, err := url.Parse(origins[0])
+	if err != nil || origin.Host == "" || origin.User != nil || origin.Path != "" || origin.RawQuery != "" || origin.ForceQuery || origin.Fragment != "" {
+		return false
+	}
+	if !strings.EqualFold(origin.Scheme, "http") && !strings.EqualFold(origin.Scheme, "https") {
+		return false
+	}
+	return strings.EqualFold(origin.Host, r.Host)
+}
+
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
+	if !wsOriginAllowed(r) {
+		writeError(w, http.StatusForbidden, "websocket origin not allowed")
+		return
+	}
+
 	terminal, err := s.store.GetTerminal(r.PathValue("wsId"), r.PathValue("tmId"))
 	if err != nil {
 		s.writeStoreError(w, err)
@@ -87,18 +135,22 @@ func (s *Server) OnOpen(socket *gws.Conn) {
 		_ = socket.WriteClose(1011, []byte("failed to start pty"))
 		return
 	}
+	cleanup := &terminalCleanup{socket: socket, ptmx: ptmx, cmd: cmd}
 	socket.Session().Store(sessionKeyPTY, ptmx)
 	socket.Session().Store(sessionKeyCmd, cmd)
-	go s.pipePTYToSocket(socket, ptmx)
+	socket.Session().Store(sessionKeyCleanup, cleanup)
+	go s.pipePTYToSocket(socket, cleanup)
 }
 
 // pipePTYToSocket forwards PTY output as {"type":"output"} frames, splitting at
 // UTF-8 boundaries so multi-byte sequences are never cut mid-character.
-func (s *Server) pipePTYToSocket(socket *gws.Conn, ptmx *os.File) {
+func (s *Server) pipePTYToSocket(socket *gws.Conn, cleanup *terminalCleanup) {
+	defer cleanup.close()
+
 	buf := make([]byte, ptyReadSize)
 	pending := []byte{}
 	for {
-		n, err := ptmx.Read(buf)
+		n, err := cleanup.ptmx.Read(buf)
 		if n > 0 {
 			pending = append(pending, buf[:n]...)
 			if len(pending) > ptyReadSize*2 {
@@ -172,15 +224,9 @@ func (s *Server) OnClose(socket *gws.Conn, err error) {
 	if err != nil {
 		s.logger.Debug("websocket closed", "err", err)
 	}
-	if val, ok := socket.Session().Load(sessionKeyPTY); ok {
-		if f, ok := val.(*os.File); ok {
-			_ = f.Close()
-		}
-	}
-	if val, ok := socket.Session().Load(sessionKeyCmd); ok {
-		if cmd, ok := val.(*exec.Cmd); ok && cmd.Process != nil {
-			_ = cmd.Process.Kill()
-			_ = cmd.Wait()
+	if val, ok := socket.Session().Load(sessionKeyCleanup); ok {
+		if cleanup, ok := val.(*terminalCleanup); ok {
+			cleanup.close()
 		}
 	}
 }
