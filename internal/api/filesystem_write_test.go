@@ -1,0 +1,86 @@
+package api
+
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/oh-my-terminal/oh-my-terminal/internal/config"
+)
+
+func newWriteTestServer(t *testing.T) (*Server, string) {
+	t.Helper()
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatalf("resolving test root: %v", err)
+	}
+	return &Server{
+		cfg:    &config.Config{Root: root},
+		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
+	}, root
+}
+
+func TestHandleWriteFileAcceptsContentAboveOneMiB(t *testing.T) {
+	s, root := newWriteTestServer(t)
+	path := filepath.Join(root, "editor.txt")
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatalf("creating target file: %v", err)
+	}
+
+	content := strings.Repeat("x", (1<<20)+1024)
+	body, err := json.Marshal(map[string]string{"content": content})
+	if err != nil {
+		t.Fatalf("encoding request: %v", err)
+	}
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/fs/write?path=editor.txt", bytes.NewReader(body))
+
+	s.handleWriteFile(recorder, req)
+
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d: %s", recorder.Code, http.StatusNoContent, recorder.Body.String())
+	}
+	written, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading saved file: %v", err)
+	}
+	if string(written) != content {
+		t.Fatalf("saved content length = %d, want %d", len(written), len(content))
+	}
+}
+
+func TestHandleWriteFileRejectsOversizedBody(t *testing.T) {
+	s, root := newWriteTestServer(t)
+	path := filepath.Join(root, "editor.txt")
+	const original = "original"
+	if err := os.WriteFile(path, []byte(original), 0o600); err != nil {
+		t.Fatalf("creating target file: %v", err)
+	}
+
+	body, err := json.Marshal(map[string]string{"content": strings.Repeat("x", maxWriteBytes+4096)})
+	if err != nil {
+		t.Fatalf("encoding request: %v", err)
+	}
+	recorder := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/fs/write?path=editor.txt", bytes.NewReader(body))
+
+	s.handleWriteFile(recorder, req)
+
+	if recorder.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want %d: %s", recorder.Code, http.StatusRequestEntityTooLarge, recorder.Body.String())
+	}
+	written, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading target file: %v", err)
+	}
+	if string(written) != original {
+		t.Fatalf("target was modified after oversized request: %q", written)
+	}
+}
