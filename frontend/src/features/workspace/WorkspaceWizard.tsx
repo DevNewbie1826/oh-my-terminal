@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useT } from "../../i18n";
 import { ModalDialog } from "../../components/ModalDialog";
 import { IconAlert } from "../../components/icons";
@@ -26,30 +26,51 @@ export function WorkspaceWizard({ open, onClose, onCreated }: WorkspaceWizardPro
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const picker = useFolderPicker(open);
+  const creatingRef = useRef(false);
+  const createGeneration = useRef(0);
 
-  // Reset wizard state each time it opens.
+  // Reset wizard state each time it opens, and invalidate a request if its
+  // owner closes the dialog through any external path.
   useEffect(() => {
     if (open) {
       setStep(1);
       setName("");
       setNameTouched(false);
+      creatingRef.current = false;
       setCreating(false);
       setError("");
+      return;
     }
+    createGeneration.current += 1;
+    creatingRef.current = false;
   }, [open]);
+
+  const closeWizard = useCallback((): void => {
+    createGeneration.current += 1;
+    creatingRef.current = false;
+    onClose();
+  }, [onClose]);
 
   const create = async (): Promise<void> => {
     const path = picker.selected;
-    if (creating || !path) return;
+    if (creatingRef.current || !path) return;
+    creatingRef.current = true;
+    const generation = createGeneration.current;
     setCreating(true);
     setError("");
     try {
       const ws = await createWorkspace(name.trim(), path);
+      if (generation !== createGeneration.current) return;
       onCreated(ws);
-      onClose();
+      closeWizard();
     } catch (err) {
+      if (generation !== createGeneration.current) return;
       setError(err instanceof Error ? err.message : t("wizard.createError"));
-      setCreating(false);
+    } finally {
+      if (generation === createGeneration.current) {
+        creatingRef.current = false;
+        setCreating(false);
+      }
     }
   };
 
@@ -59,7 +80,7 @@ export function WorkspaceWizard({ open, onClose, onCreated }: WorkspaceWizardPro
     setStep(2);
   };
   return (
-    <ModalDialog open={open} onClose={onClose} labelledBy="th-wizard-title" closeLabel={t("common.close")}>
+    <ModalDialog open={open} onClose={closeWizard} labelledBy="th-wizard-title" closeLabel={t("common.close")}>
       <WorkspaceWizardHeader step={step} />
 
       <div className="th-wizard-body">
@@ -86,7 +107,7 @@ export function WorkspaceWizard({ open, onClose, onCreated }: WorkspaceWizardPro
       </div>
 
       <div className="th-wizard-foot">
-        <button type="button" className="th-btn th-btn--ghost" onClick={onClose}>
+        <button type="button" className="th-btn th-btn--ghost" onClick={closeWizard}>
           {t("wizard.cancel")}
         </button>
         <div className="th-wizard-foot-spacer" />

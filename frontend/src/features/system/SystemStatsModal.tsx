@@ -38,7 +38,10 @@ export function SystemStatsModal({ open, onClose }: SystemStatsModalProps) {
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let inFlight = false;
     const fetchStats = (): void => {
+      if (inFlight) return;
+      inFlight = true;
       getSystemStats()
         .then((res) => {
           if (!cancelled) {
@@ -48,6 +51,9 @@ export function SystemStatsModal({ open, onClose }: SystemStatsModalProps) {
         })
         .catch((err: unknown) => {
           if (!cancelled) setError(err instanceof Error ? err.message : t("stats.error"));
+        })
+        .finally(() => {
+          inFlight = false;
         });
     };
     fetchStats();

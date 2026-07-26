@@ -52,10 +52,15 @@ export function Sidebar({
   const { t } = useT();
   const isMobile = useMediaQuery(MOBILE_QUERY);
   const [statsOpen, setStatsOpen] = useState(false);
+  const hiddenMobileDrawer = isMobile && collapsed;
   return (
     <>
       {isMobile && !collapsed && <div className="th-backdrop" onClick={onToggleCollapse} />}
-      <aside className={`th-sidebar${collapsed ? " th-sidebar--collapsed" : ""}`}>
+      <aside
+        className={`th-sidebar${collapsed ? " th-sidebar--collapsed" : ""}`}
+        aria-hidden={hiddenMobileDrawer || undefined}
+        {...(hiddenMobileDrawer ? { inert: "" } : {})}
+      >
         <div className="th-sidebar-inner">
           <div className="th-sidebar-nav">
             <span className="th-sidebar-logo">
