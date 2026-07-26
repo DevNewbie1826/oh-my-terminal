@@ -92,12 +92,15 @@ export function MobileInputOverlay({
   );
 
   /** Send the textarea's value to the terminal, then reset the bar.
-   *  Newlines become carriage returns; clearing resets the mobile IME so
-   *  the next input composes from a clean state. */
+   *  Newlines are preserved as LF: shells treat LF like CR (both accept the
+   *  line), while raw-mode TUIs can tell LF (Ctrl+J, often "insert newline")
+   *  apart from CR ("submit") — converting to CR made every line break act
+   *  as Enter. Clearing resets the mobile IME so the next input composes
+   *  from a clean state. */
   const flush = useCallback(() => {
     const el = inputRef.current;
     if (!el) return;
-    send(el.value.replace(/\n/g, "\r"));
+    send(el.value);
     el.value = "";
   }, [inputRef, send]);
 
