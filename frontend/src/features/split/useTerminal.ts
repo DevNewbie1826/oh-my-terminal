@@ -10,6 +10,7 @@ import { wsPath } from "../terminal/terminal";
 import { isCleanClose, isOutputMsg } from "./terminalConnection";
 import { fitFullWidth } from "./terminalFit";
 import { registerTerminalClipboard } from "./terminalClipboard";
+import { registerTouchSelect } from "./terminalTouchSelect";
 import { XTERM_THEME } from "./terminalTheme";
 import { registerTerminalKeys } from "./terminalKeys";
 
@@ -24,10 +25,12 @@ export interface UseTerminalOptions {
   readonly stack: string;
   readonly fontSize: number;
   readonly focused: boolean;
+  /** Fired after a touch long-press selection is copied to the clipboard. */
+  readonly onCopied?: () => void;
 }
 
 /** Owns the xterm lifecycle: terminal creation, the PTY WebSocket, and refits. */
-export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTerminalOptions) {
+export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: UseTerminalOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const connRef = useRef<WsConn | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -39,6 +42,9 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
   // active Korean/Japanese composition. Defer fits during composition.
   const composingRef = useRef(false);
   const pendingFitRef = useRef(false);
+  // Latest-copy callback without re-creating the terminal per render.
+  const onCopiedRef = useRef(onCopied);
+  onCopiedRef.current = onCopied;
 
   /** Returns true (and marks a pending fit) when an IME composition is active. */
   const deferIfComposing = (): boolean => {
@@ -61,6 +67,9 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
       cursorStyle: "bar",
       scrollback: 5000,
       allowProposedApi: true,
+      // Lets the touch-selection module force local selection on macOS,
+      // where xterm gates force-selection behind Option (not Shift).
+      macOptionClickForcesSelection: true,
       theme: XTERM_THEME,
     });
     const fit = new FitAddon();
@@ -73,6 +82,7 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
     term.unicode.activeVersion = "11";
     const osc52Sub = registerTerminalClipboard(term);
     term.open(el);
+    const disposeTouchSelect = registerTouchSelect(term, el, () => onCopiedRef.current?.());
     // GPU renderer with a DOM fallback when WebGL is unavailable. The addon
     // instance is kept so it can be disposed explicitly on cleanup — xterm's
     // addon manager otherwise disposes it during term.dispose() in an order
@@ -163,6 +173,7 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused }: UseTermina
       dataSub.dispose();
       osc52Sub.dispose();
       disposeKeys();
+      disposeTouchSelect();
       if (textarea) {
         textarea.removeEventListener("compositionstart", onCompositionStart);
         textarea.removeEventListener("compositionend", settleComposition);

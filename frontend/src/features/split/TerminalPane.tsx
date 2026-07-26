@@ -51,7 +51,14 @@ export function TerminalPane({
 }: TerminalPaneProps) {
   const { t, font, fontSize } = useT();
   const stack = FONT_PRESETS.find((p) => p.id === font)?.stack ?? SYSTEM_FONT_STACK;
-  const { containerRef, termRef, status } = useTerminal({ wsId, tmId, stack, fontSize, focused });
+  const { containerRef, termRef, status } = useTerminal({
+    wsId,
+    tmId,
+    stack,
+    fontSize,
+    focused,
+    onCopied: () => notify(t("toast.copiedSelection"), "success"),
+  });
   const isMobile = useMediaQuery(MOBILE_QUERY);
   const mobileInputRef = useRef<HTMLTextAreaElement>(null);
   const [showFiles, setShowFiles] = useState(false);

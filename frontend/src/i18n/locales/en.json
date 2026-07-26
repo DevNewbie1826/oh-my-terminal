@@ -117,5 +117,6 @@
   "editor.discardConfirm": "Discard unsaved changes?",
   "editor.discard": "Discard",
   "common.close": "Close",
-  "confirm.ok": "Confirm"
+  "confirm.ok": "Confirm",
+  "toast.copiedSelection": "Selection copied"
 }
