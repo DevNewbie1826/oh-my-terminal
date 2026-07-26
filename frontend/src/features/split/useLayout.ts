@@ -19,6 +19,8 @@ export interface LayoutApi {
   readonly focusedPaneId: string;
   readonly placed: ReadonlySet<string>;
   readonly focusPane: (paneId: string) => void;
+  /** Whether the pane is still in the current tree (including unrendered ref updates). */
+  readonly hasPane: (paneId: string) => boolean;
   readonly assignSession: (paneId: string, tmId: string) => void;
   readonly split: (paneId: string, dir: SplitDir) => void;
   readonly closePane: (paneId: string) => void;
@@ -94,8 +96,13 @@ export function useLayout(authed: boolean): LayoutApi {
     setFocusedPaneId(paneId);
   }, []);
 
+  const hasPane = useCallback((paneId: string): boolean => findLeaf(rootRef.current, paneId) !== null, []);
+
   const assignSession = useCallback(
     (paneId: string, tmId: string) => {
+      // The pane may have closed while an async terminal creation was pending.
+      // Do not unplace the session or move focus when its target no longer exists.
+      if (!findLeaf(rootRef.current, paneId)) return;
       // A session lives in exactly one pane; unplace it elsewhere first.
       const cleared = removeSession(rootRef.current, tmId);
       commit(setLeafSession(cleared, paneId, tmId));
@@ -154,6 +161,7 @@ export function useLayout(authed: boolean): LayoutApi {
     focusedPaneId,
     placed,
     focusPane,
+    hasPane,
     assignSession,
     split,
     closePane,
@@ -178,7 +186,7 @@ function isRecord(v: unknown): v is Readonly<Record<string, unknown>> {
 }
 
 /** Validate and normalize an untrusted persisted blob into a PaneNode tree. */
-function parseLayout(blob: unknown): PaneNode | null {
+export function parseLayout(blob: unknown): PaneNode | null {
   if (!isRecord(blob)) return null;
   const kind = blob["kind"];
   const id = readString(blob, "id");

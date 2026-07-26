@@ -40,6 +40,9 @@ const CLOSE_PING_TIMEOUT = 4000;
 export function connectWs(path: string, handlers: WsHandlers, options: WsOptions = {}): WsConn {
   let socket: WebSocket | null = null;
   let closed = false;
+  // A reconnect veto is terminal for this connection (for example, when a
+  // server has cleanly ended a terminal session).
+  let reconnectVetoed = false;
   let attempt = 0;
   let retryTimer = 0;
   let pingTimer = 0;
@@ -98,7 +101,11 @@ export function connectWs(path: string, handlers: WsHandlers, options: WsOptions
       clearTimers();
       handlers.onClose?.(ev.code);
       if (closed) return;
-      if (!(options.reconnect?.(ev.code) ?? true)) return;
+      if (!(options.reconnect?.(ev.code) ?? true)) {
+        reconnectVetoed = true;
+        window.clearTimeout(retryTimer);
+        return;
+      }
       scheduleReconnect();
     };
   };
@@ -125,7 +132,7 @@ export function connectWs(path: string, handlers: WsHandlers, options: WsOptions
 
   /** On returning to the foreground, probe the socket instead of waiting. */
   const onVisibility = (): void => {
-    if (closed || document.visibilityState !== "visible") return;
+    if (closed || reconnectVetoed || document.visibilityState !== "visible") return;
     const ws = socket;
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       window.clearTimeout(retryTimer);

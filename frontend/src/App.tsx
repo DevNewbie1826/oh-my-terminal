@@ -128,7 +128,9 @@ export function App() {
           setWorkspaces((prev) =>
             prev.map((w) => (w.id === wsId ? { ...w, terminals: [...w.terminals, tm] } : w)),
           );
-          layout.assignSession(paneId, tm.id);
+          // The user can close this pane while the terminal request is pending.
+          // In that case keep the new terminal unplaced and available in the sidebar.
+          if (layout.hasPane(paneId)) layout.assignSession(paneId, tm.id);
           notify(t("toast.terminalAdded"), "success");
         })
         .catch(() => notify(t("toast.error"), "error"));
