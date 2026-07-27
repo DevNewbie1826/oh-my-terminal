@@ -140,7 +140,12 @@
   .th-sidebar--collapsed {
     width: var(--th-sidebar-w);
     transform: translateX(-100%);
-    border-right-color: var(--th-border);
+    border-right-color: transparent;
+    box-shadow: none;
+    pointer-events: none;
+    transition: transform var(--th-dur-slow) var(--th-ease),
+      visibility 0s linear var(--th-dur-slow);
+    visibility: hidden;
   }
 }
 
