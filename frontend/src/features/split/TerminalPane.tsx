@@ -58,7 +58,6 @@ export function TerminalPane({
     stack,
     fontSize,
     focused,
-    isMobile,
     onCopied: () => notify(t("toast.copiedSelection"), "success"),
   });
   const mobileInputRef = useRef<HTMLTextAreaElement>(null);
@@ -96,11 +95,7 @@ export function TerminalPane({
       className={`th-stage th-pane${focused ? " th-pane--focused" : ""}`}
       onPointerDown={() => {
         onFocus();
-        // Desktop: focus xterm's own textarea so typing reaches the PTY.
-        // Mobile: do NOT focus the input bar here — the keyboard should only
-        // open when the user taps the input bar itself, not the terminal. The
-        // bar's textarea raises the keyboard natively on its own tap (iOS only
-        // opens it synchronously inside a user gesture on the focused field).
+        // Mobile input must receive the user's direct tap to open its keyboard.
         if (!isMobile) {
           termRef.current?.focus();
         }

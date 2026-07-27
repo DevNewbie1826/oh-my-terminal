@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { Unicode11Addon } from "@xterm/addon-unicode11";
 import { connectWs } from "../../lib/ws";
 import type { WsConn } from "../../lib/ws";
@@ -25,7 +24,6 @@ export interface UseTerminalOptions {
   readonly stack: string;
   readonly fontSize: number;
   readonly focused: boolean;
-  readonly isMobile: boolean;
   readonly onCopied?: () => void;
 }
 
@@ -35,7 +33,6 @@ export function useTerminal({
   stack,
   fontSize,
   focused,
-  isMobile,
   onCopied,
 }: UseTerminalOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,7 +45,7 @@ export function useTerminal({
   // active Korean/Japanese composition. Defer fits during composition.
   const composingRef = useRef(false);
   const pendingFitRef = useRef(false);
-  // Terminal setup only changes for session IDs and renderer mode, but
+  // Terminal setup only changes for session IDs, but
   // TerminalPane creates this callback on every render. Keep the latest
   // callback without recreating xterm.
   const onCopiedRef = useRef(onCopied);
@@ -90,31 +87,6 @@ export function useTerminal({
     const osc52Sub = registerTerminalClipboard(term);
     term.open(el);
     const disposeTouchSelect = registerTouchSelect(term, el, () => onCopiedRef.current?.());
-    // GPU rendering is unsafe on mobile. On desktop, keep the addon to dispose
-    // it before term.dispose(): xterm's addon manager tears it down in an order
-    // that throws and crashes the app on a session switch.
-    let webgl: WebglAddon | null = null;
-    let webglContextLossSub: { dispose: () => void } | null = null;
-    if (!isMobile) {
-      try {
-        webgl = new WebglAddon();
-        term.loadAddon(webgl);
-        webglContextLossSub = webgl.onContextLoss(() => {
-          const renderer = webgl;
-          if (!renderer) return;
-          webgl = null;
-          try {
-            renderer.dispose();
-          } catch {
-            /* WebGL renderer already torn down */
-          }
-          term.refresh(0, term.rows - 1);
-        });
-      } catch {
-        webgl = null;
-        /* WebGL unsupported — xterm keeps its DOM renderer */
-      }
-    }
     termRef.current = term;
     fitRef.current = fit;
 
@@ -204,27 +176,13 @@ export function useTerminal({
       connRef.current = null;
       termRef.current = null;
       fitRef.current = null;
-      // Unsubscribe before disposing the renderer, then dispose it before the
-      // terminal to avoid xterm's addon teardown ordering bug.
-      const contextLossSub = webglContextLossSub;
-      webglContextLossSub = null;
-      contextLossSub?.dispose();
-      const renderer = webgl;
-      webgl = null;
-      if (renderer) {
-        try {
-          renderer.dispose();
-        } catch {
-          /* already torn down */
-        }
-      }
       try {
         term.dispose();
       } catch {
         /* disposal best-effort — the element is leaving the DOM anyway */
       }
     };
-  }, [wsId, tmId, isMobile]);
+  }, [wsId, tmId]);
 
   // Apply font/size changes without recreating the terminal (preserves
   // scrollback). A new font or size changes cell metrics, so cols/rows change
