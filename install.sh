@@ -70,17 +70,14 @@ fi
 tar -xzf "${tmp}/${asset}" -C "$tmp"
 [ -f "${tmp}/${BINARY}" ] || fail "archive did not contain ${BINARY}"
 
-SUDO=""
 if [ ! -w "$INSTALL_DIR" ] && [ ! -w "$(dirname "$INSTALL_DIR")" ]; then
-  if command -v sudo >/dev/null 2>&1; then
-    SUDO="sudo"
-  else
-    fail "cannot write to ${INSTALL_DIR}; set INSTALL_DIR (e.g. INSTALL_DIR=~/.local/bin) or run as root."
-  fi
+  command -v sudo >/dev/null 2>&1 || fail "cannot write to ${INSTALL_DIR}; set INSTALL_DIR (e.g. INSTALL_DIR=~/.local/bin) or run as root."
+  sudo mkdir -p "$INSTALL_DIR"
+  sudo install -m 0755 "${tmp}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
+else
+  mkdir -p "$INSTALL_DIR"
+  install -m 0755 "${tmp}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
 fi
-
-$SUDO mkdir -p "$INSTALL_DIR"
-$SUDO install -m 0755 "${tmp}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
 info "installed ${INSTALL_DIR}/${BINARY}"
 
 case ":$PATH:" in
