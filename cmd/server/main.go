@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -19,6 +21,9 @@ func main() {
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	cfg, err := config.Load(ctx, os.Args[1:])
+	if errors.Is(err, flag.ErrHelp) {
+		return
+	}
 	if err != nil {
 		logger.Error("configuration error", "err", err)
 		os.Exit(1)
