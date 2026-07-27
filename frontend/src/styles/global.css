@@ -13,29 +13,28 @@ body {
 }
 
 #root {
-  /* Pin the entire app to the visual viewport.
+  /* Pin the app to the dynamic viewport while the keyboard is closed.
 
-     position: fixed anchors to the layout viewport, which on iOS does NOT
-     shrink when the keyboard opens — but the visual viewport does, and iOS
-     additionally pans it (offsetTop grows) to keep the focused input
-     visible. Without compensation the app rides that pan and jumps up by
-     roughly the keyboard height (or more, when iOS over-pans).
-
-     So: size to the visual viewport (--th-vh-unit) and translate by its pan
-     offset (--th-vv-top/left, kept in sync by the inline script in
-     index.html). The app always fills exactly the visible region — the
-     input bar lands on the keyboard's top edge and nothing pans. */
+     A closed iOS VisualViewport can remain shorter than the screen after
+     browser UI or keyboard transitions. Using it unconditionally leaves a
+     blank strip below the app. 100dvh tracks the actual closed viewport;
+     the keyboard-open rule below switches to VisualViewport geometry so the
+     input bar still lands on the keyboard edge. */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  height: calc(var(--th-vh-unit, 1vh) * 100);
+  height: 100dvh;
   overflow: hidden;
-  transform: translate(var(--th-vv-left, 0px), var(--th-vv-top, 0px));
   /* Keep header and side controls clear of cutouts. The mobile input bar
      owns the bottom inset so its background can remain full-bleed. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+html[data-th-keyboard-open] #root {
+  height: calc(var(--th-vh-unit, 1vh) * 100);
+  transform: translate(var(--th-vv-left, 0px), var(--th-vv-top, 0px));
 }
 
 body {

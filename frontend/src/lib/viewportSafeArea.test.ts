@@ -8,6 +8,18 @@ const globalCss = readFileSync("src/styles/global.css", "utf8");
 const mobileInputCss = readFileSync("src/styles/mobile-input.css", "utf8");
 
 describe("mobile safe area", () => {
+  test("uses the dynamic viewport until the software keyboard opens", () => {
+    expect(globalCss).toMatch(
+      /^#root \{[^}]*height: 100vh;[^}]*height: 100dvh;[^}]*padding: env\(safe-area-inset-top\)/m,
+    );
+    expect(globalCss).not.toMatch(
+      /^#root \{[^}]*(?:--th-vh-unit|--th-vv-left|--th-vv-top|transform:)/m,
+    );
+    expect(globalCss).toMatch(
+      /html\[data-th-keyboard-open\] #root \{[^}]*height: calc\(var\(--th-vh-unit, 1vh\) \* 100\);[^}]*transform: translate\(var\(--th-vv-left, 0px\), var\(--th-vv-top, 0px\)\)/,
+    );
+  });
+
   test("fills the screen edge while keeping controls above the home indicator", () => {
     expect(globalCss).toMatch(
       /#root \{[^}]*padding: env\(safe-area-inset-top\) env\(safe-area-inset-right\) 0 env\(safe-area-inset-left\)/,
