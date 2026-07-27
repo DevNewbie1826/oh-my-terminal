@@ -61,10 +61,9 @@ if command -v shasum >/dev/null 2>&1; then
 elif command -v sha256sum >/dev/null 2>&1; then
   actual="$(sha256sum "${tmp}/${asset}" | awk '{print $1}')"
 else
-  actual=""
-  warn "no sha256 tool found; skipping checksum verification."
+  fail "shasum or sha256sum is required for checksum verification."
 fi
-if [ -n "$actual" ] && [ "$actual" != "$expected" ]; then
+if [ "$actual" != "$expected" ]; then
   fail "checksum mismatch for ${asset}: expected ${expected}, got ${actual}"
 fi
 
