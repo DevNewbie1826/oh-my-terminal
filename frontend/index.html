@@ -24,8 +24,6 @@
     //    the keyboard opens, iOS pans the visual viewport to keep the focused
     //    input visible; #root translates by this offset to stay glued to the
     //    visible region instead of being carried off-screen (see global.css).
-    //  - data-th-keyboard-open: removes the bottom safe-area inset while the
-    //    iOS keyboard already covers the home indicator.
     (function () {
       var rootStyle = document.documentElement.style;
       var set = function () {
@@ -34,10 +32,6 @@
         rootStyle.setProperty("--th-vh-unit", h * 0.01 + "px");
         rootStyle.setProperty("--th-vv-top", vv ? vv.offsetTop + "px" : "0px");
         rootStyle.setProperty("--th-vv-left", vv ? vv.offsetLeft + "px" : "0px");
-        document.documentElement.toggleAttribute(
-          "data-th-keyboard-open",
-          !!vv && window.innerHeight - vv.height > 100,
-        );
       };
       set();
       if (window.visualViewport) {

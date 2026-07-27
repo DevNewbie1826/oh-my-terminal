@@ -33,14 +33,9 @@ body {
   height: calc(var(--th-vh-unit, 1vh) * 100);
   overflow: hidden;
   transform: translate(var(--th-vv-left, 0px), var(--th-vv-top, 0px));
-  /* viewport-fit=cover extends the app under the notch / home indicator;
-     carve the safe areas back out so header buttons stay tappable. The
-     inset strips show the body background. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-
-html[data-th-keyboard-open] #root {
-  padding-bottom: 0;
+  /* Keep header and side controls clear of cutouts. The mobile input bar
+     owns the bottom inset so its background can remain full-bleed. */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
 }
 
 body {
