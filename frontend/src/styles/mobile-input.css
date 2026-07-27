@@ -20,6 +20,13 @@
   z-index: 5;
 }
 
+@media (display-mode: standalone) {
+  .th-mobile-inputbar {
+    /* 100dvh already stops above the iOS home indicator in installed PWAs. */
+    padding-bottom: 8px;
+  }
+}
+
 html[data-th-keyboard-open] .th-mobile-inputbar:has(.th-mobile-input:focus) {
   padding-bottom: 8px;
 }

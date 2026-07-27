@@ -13,9 +13,8 @@ body {
 }
 
 #root {
-  /* Browser tabs use the visible dynamic viewport; installed PWAs override
-     this with the large viewport below. The keyboard-open rule then switches
-     both modes to VisualViewport geometry. */
+  /* Keep controls inside the visible viewport. The keyboard-open rule below
+     switches to VisualViewport geometry when iOS shrinks and pans it. */
   position: fixed;
   top: 0;
   left: 0;
@@ -30,18 +29,6 @@ body {
 @supports (height: 100dvh) {
   #root {
     height: 100dvh;
-  }
-}
-
-@media (display-mode: standalone) {
-  #root {
-    height: 100vh;
-  }
-
-  @supports (height: 100lvh) {
-    #root {
-      height: 100lvh;
-    }
   }
 }
 

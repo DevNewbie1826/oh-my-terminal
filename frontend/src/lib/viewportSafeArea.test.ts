@@ -8,33 +8,32 @@ const globalCss = readFileSync("src/styles/global.css", "utf8");
 const mobileInputCss = readFileSync("src/styles/mobile-input.css", "utf8");
 
 describe("mobile safe area", () => {
-  test("uses the large viewport only in standalone mode", () => {
+  test("keeps layout inside the visible viewport", () => {
     expect(globalCss).toMatch(
       /^#root \{[^}]*height: 100vh;[^}]*padding: env\(safe-area-inset-top\)/m,
     );
     expect(globalCss).toMatch(
       /@supports \(height: 100dvh\) \{\s*#root \{\s*height: 100dvh;\s*\}\s*\}/,
     );
-    expect(globalCss).toMatch(
-      /@media \(display-mode: standalone\) \{[\s\S]*?#root \{\s*height: 100vh;\s*\}[\s\S]*?@supports \(height: 100lvh\) \{\s*#root \{\s*height: 100lvh;\s*\}\s*\}\s*\}/,
-    );
-    expect(globalCss.indexOf("@supports (height: 100dvh)")).toBeLessThan(
-      globalCss.indexOf("@media (display-mode: standalone)"),
-    );
-    expect(globalCss).not.toMatch(
-      /^#root \{[^}]*(?:100dvh|100lvh|--th-vh-unit|--th-vv-left|--th-vv-top|transform:)/m,
-    );
+    expect(globalCss).not.toContain("100lvh");
     expect(globalCss).toMatch(
       /html\[data-th-keyboard-open\] #root \{[^}]*height: calc\(var\(--th-vh-unit, 1vh\) \* 100\);[^}]*transform: translate\(var\(--th-vv-left, 0px\), var\(--th-vv-top, 0px\)\)/,
     );
   });
 
   test("fills the screen edge while keeping controls above the home indicator", () => {
+    expect(globalCss).toMatch(/body \{[^}]*background: var\(--th-bg\)/);
     expect(globalCss).toMatch(
       /#root \{[^}]*padding:\s+env\(safe-area-inset-top\)\s+env\(safe-area-inset-right\)\s+0\s+env\(safe-area-inset-left\)/,
     );
     expect(mobileInputCss).toMatch(
       /\.th-mobile-inputbar \{[^}]*padding: 8px 10px calc\(8px \+ env\(safe-area-inset-bottom\)\)/,
+    );
+    expect(mobileInputCss).toMatch(
+      /\.th-mobile-inputbar \{[^}]*background: var\(--th-bg\)/,
+    );
+    expect(mobileInputCss).toMatch(
+      /@media \(display-mode: standalone\) \{\s*\.th-mobile-inputbar \{[^}]*padding-bottom: 8px;\s*\}\s*\}/,
     );
     expect(mobileInputCss).toMatch(
       /html\[data-th-keyboard-open\] \.th-mobile-inputbar:has\(\.th-mobile-input:focus\) \{[^}]*padding-bottom: 8px/,
