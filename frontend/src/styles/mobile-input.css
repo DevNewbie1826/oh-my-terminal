@@ -54,7 +54,6 @@
   font-family: var(--th-font-mono);
   font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
   transition: background var(--th-dur-fast) var(--th-ease),
     transform var(--th-dur-fast) var(--th-ease);
 }
@@ -85,7 +84,6 @@
   border-radius: var(--th-radius);
   background: var(--th-surface);
   color: var(--th-muted);
-  cursor: pointer;
   transition: background var(--th-dur-fast) var(--th-ease),
     color var(--th-dur-fast) var(--th-ease);
 }
@@ -135,11 +133,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
   border-radius: var(--th-radius);
   background: var(--th-accent);
   color: var(--th-accent-fg);
-  cursor: pointer;
   transition: background var(--th-dur-fast) var(--th-ease),
     transform var(--th-dur-fast) var(--th-ease);
 }
