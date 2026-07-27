@@ -25,10 +25,19 @@ export interface UseTerminalOptions {
   readonly stack: string;
   readonly fontSize: number;
   readonly focused: boolean;
+  readonly isMobile: boolean;
   readonly onCopied?: () => void;
 }
 
-export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: UseTerminalOptions) {
+export function useTerminal({
+  wsId,
+  tmId,
+  stack,
+  fontSize,
+  focused,
+  isMobile,
+  onCopied,
+}: UseTerminalOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const connRef = useRef<WsConn | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -39,8 +48,9 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
   // active Korean/Japanese composition. Defer fits during composition.
   const composingRef = useRef(false);
   const pendingFitRef = useRef(false);
-  // Terminal setup only changes for session IDs, but TerminalPane creates this
-  // callback on every render. Keep the latest callback without recreating xterm.
+  // Terminal setup only changes for session IDs and renderer mode, but
+  // TerminalPane creates this callback on every render. Keep the latest
+  // callback without recreating xterm.
   const onCopiedRef = useRef(onCopied);
   onCopiedRef.current = onCopied;
 
@@ -80,16 +90,30 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
     const osc52Sub = registerTerminalClipboard(term);
     term.open(el);
     const disposeTouchSelect = registerTouchSelect(term, el, () => onCopiedRef.current?.());
-    // GPU renderer with a DOM fallback when WebGL is unavailable. Keep the
-    // addon to dispose it before term.dispose(): xterm's addon manager tears it
-    // down in an order that throws and crashes the app on a session switch.
+    // GPU rendering is unsafe on mobile. On desktop, keep the addon to dispose
+    // it before term.dispose(): xterm's addon manager tears it down in an order
+    // that throws and crashes the app on a session switch.
     let webgl: WebglAddon | null = null;
-    try {
-      webgl = new WebglAddon();
-      term.loadAddon(webgl);
-    } catch {
-      webgl = null;
-      /* WebGL unsupported — xterm keeps its DOM renderer */
+    let webglContextLossSub: { dispose: () => void } | null = null;
+    if (!isMobile) {
+      try {
+        webgl = new WebglAddon();
+        term.loadAddon(webgl);
+        webglContextLossSub = webgl.onContextLoss(() => {
+          const renderer = webgl;
+          if (!renderer) return;
+          webgl = null;
+          try {
+            renderer.dispose();
+          } catch {
+            /* WebGL renderer already torn down */
+          }
+          term.refresh(0, term.rows - 1);
+        });
+      } catch {
+        webgl = null;
+        /* WebGL unsupported — xterm keeps its DOM renderer */
+      }
     }
     termRef.current = term;
     fitRef.current = fit;
@@ -180,11 +204,16 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
       connRef.current = null;
       termRef.current = null;
       fitRef.current = null;
-      // Dispose the WebGL renderer before the terminal to avoid the addon
-      // teardown ordering bug; guard both so a disposal error never crashes.
-      if (webgl) {
+      // Unsubscribe before disposing the renderer, then dispose it before the
+      // terminal to avoid xterm's addon teardown ordering bug.
+      const contextLossSub = webglContextLossSub;
+      webglContextLossSub = null;
+      contextLossSub?.dispose();
+      const renderer = webgl;
+      webgl = null;
+      if (renderer) {
         try {
-          webgl.dispose();
+          renderer.dispose();
         } catch {
           /* already torn down */
         }
@@ -195,7 +224,7 @@ export function useTerminal({ wsId, tmId, stack, fontSize, focused, onCopied }: 
         /* disposal best-effort — the element is leaving the DOM anyway */
       }
     };
-  }, [wsId, tmId]);
+  }, [wsId, tmId, isMobile]);
 
   // Apply font/size changes without recreating the terminal (preserves
   // scrollback). A new font or size changes cell metrics, so cols/rows change
