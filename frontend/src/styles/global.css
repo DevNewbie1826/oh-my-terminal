@@ -13,23 +13,36 @@ body {
 }
 
 #root {
-  /* Pin the app to the dynamic viewport while the keyboard is closed.
-
-     A closed iOS VisualViewport can remain shorter than the screen after
-     browser UI or keyboard transitions. Using it unconditionally leaves a
-     blank strip below the app. 100dvh tracks the actual closed viewport;
-     the keyboard-open rule below switches to VisualViewport geometry so the
-     input bar still lands on the keyboard edge. */
+  /* Browser tabs use the visible dynamic viewport; installed PWAs override
+     this with the large viewport below. The keyboard-open rule then switches
+     both modes to VisualViewport geometry. */
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  height: 100dvh;
   overflow: hidden;
   /* Keep header and side controls clear of cutouts. The mobile input bar
      owns the bottom inset so its background can remain full-bleed. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+}
+
+@supports (height: 100dvh) {
+  #root {
+    height: 100dvh;
+  }
+}
+
+@media (display-mode: standalone) {
+  #root {
+    height: 100vh;
+  }
+
+  @supports (height: 100lvh) {
+    #root {
+      height: 100lvh;
+    }
+  }
 }
 
 html[data-th-keyboard-open] #root {

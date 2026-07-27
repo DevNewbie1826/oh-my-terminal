@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { describe, expect, test } from "vitest";
+import { assert, describe, expect, test } from "vitest";
 
 import pageHtml from "../../index.html?raw";
 
@@ -8,12 +8,21 @@ const globalCss = readFileSync("src/styles/global.css", "utf8");
 const mobileInputCss = readFileSync("src/styles/mobile-input.css", "utf8");
 
 describe("mobile safe area", () => {
-  test("uses the dynamic viewport until the software keyboard opens", () => {
+  test("uses the large viewport only in standalone mode", () => {
     expect(globalCss).toMatch(
-      /^#root \{[^}]*height: 100vh;[^}]*height: 100dvh;[^}]*padding: env\(safe-area-inset-top\)/m,
+      /^#root \{[^}]*height: 100vh;[^}]*padding: env\(safe-area-inset-top\)/m,
+    );
+    expect(globalCss).toMatch(
+      /@supports \(height: 100dvh\) \{\s*#root \{\s*height: 100dvh;\s*\}\s*\}/,
+    );
+    expect(globalCss).toMatch(
+      /@media \(display-mode: standalone\) \{[\s\S]*?#root \{\s*height: 100vh;\s*\}[\s\S]*?@supports \(height: 100lvh\) \{\s*#root \{\s*height: 100lvh;\s*\}\s*\}\s*\}/,
+    );
+    expect(globalCss.indexOf("@supports (height: 100dvh)")).toBeLessThan(
+      globalCss.indexOf("@media (display-mode: standalone)"),
     );
     expect(globalCss).not.toMatch(
-      /^#root \{[^}]*(?:--th-vh-unit|--th-vv-left|--th-vv-top|transform:)/m,
+      /^#root \{[^}]*(?:100dvh|100lvh|--th-vh-unit|--th-vv-left|--th-vv-top|transform:)/m,
     );
     expect(globalCss).toMatch(
       /html\[data-th-keyboard-open\] #root \{[^}]*height: calc\(var\(--th-vh-unit, 1vh\) \* 100\);[^}]*transform: translate\(var\(--th-vv-left, 0px\), var\(--th-vv-top, 0px\)\)/,
@@ -22,7 +31,7 @@ describe("mobile safe area", () => {
 
   test("fills the screen edge while keeping controls above the home indicator", () => {
     expect(globalCss).toMatch(
-      /#root \{[^}]*padding: env\(safe-area-inset-top\) env\(safe-area-inset-right\) 0 env\(safe-area-inset-left\)/,
+      /#root \{[^}]*padding:\s+env\(safe-area-inset-top\)\s+env\(safe-area-inset-right\)\s+0\s+env\(safe-area-inset-left\)/,
     );
     expect(mobileInputCss).toMatch(
       /\.th-mobile-inputbar \{[^}]*padding: 8px 10px calc\(8px \+ env\(safe-area-inset-bottom\)\)/,
@@ -36,7 +45,13 @@ describe("mobile safe area", () => {
     const script = pageHtml.match(/<script>([\s\S]*?)<\/script>/)?.[1];
     expect(script).toBeDefined();
 
-    const originalViewport = Object.getOwnPropertyDescriptor(window, "visualViewport");
+    const frame = document.createElement("iframe");
+    document.body.appendChild(frame);
+    assert(frame.contentWindow);
+    assert(frame.contentDocument);
+    assert(script);
+    const viewportWindow = frame.contentWindow as typeof window;
+    const viewportDocument = frame.contentDocument;
     const resizeListeners: Array<() => void> = [];
     const viewport = {
       height: 844,
@@ -47,35 +62,35 @@ describe("mobile safe area", () => {
         if (type === "resize") resizeListeners.push(listener);
       },
     };
-    const input = document.createElement("textarea");
+    const input = viewportDocument.createElement("textarea");
 
     try {
-      Object.defineProperty(window, "visualViewport", {
+      Object.defineProperty(viewportWindow, "visualViewport", {
         configurable: true,
         value: viewport,
       });
-      window.eval(script!);
-      document.body.appendChild(input);
+      viewportWindow.eval(script);
+      viewportDocument.body.appendChild(input);
       input.focus();
 
-      expect(document.documentElement.hasAttribute("data-th-keyboard-open")).toBe(false);
+      expect(
+        viewportDocument.documentElement.hasAttribute("data-th-keyboard-open"),
+      ).toBe(false);
 
       viewport.height = 504;
       for (const listener of resizeListeners) listener();
-      expect(document.documentElement.hasAttribute("data-th-keyboard-open")).toBe(true);
+      expect(
+        viewportDocument.documentElement.hasAttribute("data-th-keyboard-open"),
+      ).toBe(true);
 
       viewport.height = 844;
       for (const listener of resizeListeners) listener();
-      expect(document.activeElement).toBe(input);
-      expect(document.documentElement.hasAttribute("data-th-keyboard-open")).toBe(false);
+      expect(viewportDocument.activeElement).toBe(input);
+      expect(
+        viewportDocument.documentElement.hasAttribute("data-th-keyboard-open"),
+      ).toBe(false);
     } finally {
-      input.remove();
-      document.documentElement.removeAttribute("data-th-keyboard-open");
-      if (originalViewport) {
-        Object.defineProperty(window, "visualViewport", originalViewport);
-      } else {
-        Reflect.deleteProperty(window, "visualViewport");
-      }
+      frame.remove();
     }
   });
 });
