@@ -73,6 +73,7 @@
   "files.title": "파일",
   "files.close": "파일 브라우저 닫기",
   "files.uploadHint": "파일을 여기에 끌어다 놓아 업로드",
+  "files.choose": "파일 선택",
   "files.uploading": "업로드 중…",
   "files.empty": "빈 폴더입니다",
   "files.download": "다운로드",

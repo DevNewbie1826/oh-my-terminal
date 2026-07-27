@@ -73,6 +73,7 @@
   "files.title": "Files",
   "files.close": "Close file browser",
   "files.uploadHint": "Drag & drop files here to upload",
+  "files.choose": "Choose files",
   "files.uploading": "Uploading…",
   "files.empty": "This folder is empty",
   "files.download": "Download",

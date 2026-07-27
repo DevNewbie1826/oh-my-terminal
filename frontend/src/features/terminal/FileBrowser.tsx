@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import type { DragEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChangeEvent, DragEvent } from "react";
 import { useT } from "../../i18n";
 import { fsList, uploadFiles } from "./terminal";
 import { joinPath } from "../../lib/path";
@@ -24,6 +24,8 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const uploadingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<{ readonly name: string; readonly path: string } | null>(
@@ -51,7 +53,8 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
 
   const upload = useCallback(
     async (files: readonly File[]): Promise<void> => {
-      if (files.length === 0 || uploading) return;
+      if (files.length === 0 || uploadingRef.current) return;
+      uploadingRef.current = true;
       setUploading(true);
       try {
         await uploadFiles(wsId, tmId, files);
@@ -60,12 +63,20 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
       } catch (err: unknown) {
         notify(err instanceof Error ? err.message : t("toast.uploadFailed"), "error");
       } finally {
+        uploadingRef.current = false;
         setUploading(false);
         setDragOver(false);
       }
     },
-    [wsId, tmId, uploading, notify, t],
+    [wsId, tmId, notify, t],
   );
+
+  const onChooseFiles = (ev: ChangeEvent<HTMLInputElement>): void => {
+    const input = ev.currentTarget;
+    void upload(Array.from(input.files ?? [])).finally(() => {
+      input.value = "";
+    });
+  };
 
   const onDrop = (ev: DragEvent<HTMLDivElement>): void => {
     ev.preventDefault();
@@ -109,9 +120,29 @@ export function FileBrowser({ path, wsId, tmId, width, onClose, notify }: FileBr
         />
       ) : (
         <>
-          <div className={`th-files-drop${uploading ? " th-files-drop--busy" : ""}`}>
+          <div
+            className={`th-files-drop${uploading ? " th-files-drop--busy" : ""}`}
+            aria-busy={uploading}
+          >
             <IconUpload size={15} />
             <span>{uploading ? t("files.uploading") : t("files.uploadHint")}</span>
+            <button
+              type="button"
+              className="th-btn th-btn--ghost th-files-choose"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {t("files.choose")}
+            </button>
+            <input
+              ref={fileInputRef}
+              className="th-files-input"
+              type="file"
+              multiple
+              tabIndex={-1}
+              aria-hidden="true"
+              onChange={onChooseFiles}
+            />
           </div>
 
           {error.length > 0 ? (
