@@ -26,12 +26,29 @@
     //    visible region instead of being carried off-screen (see global.css).
     (function () {
       var rootStyle = document.documentElement.style;
+      var baselineWidth = 0;
+      var baselineHeight = 0;
       var set = function () {
         var vv = window.visualViewport;
         var h = vv ? vv.height : window.innerHeight;
+        var w = vv ? vv.width : window.innerWidth;
+        if (!baselineWidth || Math.abs(w - baselineWidth) > 1) {
+          baselineWidth = w;
+          baselineHeight = h;
+        } else if (h > baselineHeight) {
+          baselineHeight = h;
+        }
         rootStyle.setProperty("--th-vh-unit", h * 0.01 + "px");
         rootStyle.setProperty("--th-vv-top", vv ? vv.offsetTop + "px" : "0px");
         rootStyle.setProperty("--th-vv-left", vv ? vv.offsetLeft + "px" : "0px");
+        document.documentElement.toggleAttribute(
+          "data-th-keyboard-open",
+          baselineHeight - h > 100,
+        );
+      };
+      var reset = function () {
+        baselineWidth = 0;
+        set();
       };
       set();
       if (window.visualViewport) {
@@ -39,8 +56,8 @@
         window.visualViewport.addEventListener("scroll", set);
       }
       window.addEventListener("scroll", set, { passive: true });
-      window.addEventListener("orientationchange", set);
-      window.addEventListener("pageshow", set);
+      window.addEventListener("orientationchange", reset);
+      window.addEventListener("pageshow", reset);
     })();
   </script>
 </head>

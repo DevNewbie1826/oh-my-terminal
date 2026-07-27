@@ -20,7 +20,7 @@
   z-index: 5;
 }
 
-.th-mobile-inputbar:has(.th-mobile-input:focus) {
+html[data-th-keyboard-open] .th-mobile-inputbar:has(.th-mobile-input:focus) {
   padding-bottom: 8px;
 }
 
